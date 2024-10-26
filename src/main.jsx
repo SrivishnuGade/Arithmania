@@ -88,7 +88,7 @@ function loadModel(path, scale, positionY = 0,counter =0, callback) {
         const rotations = [Math.PI, Math.PI / 2, -Math.PI / 2];
         const positions = [
             new THREE.Vector3(counter, positionY, 90),    // Clone 1
-            new THREE.Vector3(-120, positionY, counter),   // Clone 2
+            new THREE.Vector3(-90, positionY, counter),   // Clone 2
             new THREE.Vector3(90, positionY, -counter)    // Clone 3
         ];
 
