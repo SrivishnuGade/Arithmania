@@ -108,19 +108,19 @@ function loadModel(path, scale, positionY = 0,counter =0, callback) {
 }
 
 // Load Models with Appropriate Scales and Positions
-loadModel('src/assets/shelby/scene.gltf', 450, 0,0, function() {
+loadModel('/assets/shelby/scene.gltf', 450, 0,0, function() {
     console.log('Shelby loaded');
 });
-loadModel('src/assets/porsche/scene.gltf', 5, 0.55,15, function() {
+loadModel('/assets/porsche/scene.gltf', 5, 0.55,15, function() {
     console.log('Porsche loaded');
 });
-loadModel('src/assets/boxster/scene.gltf', 1.35, 3.9,30, function() {
+loadModel('/assets/boxster/scene.gltf', 1.35, 3.9,30, function() {
     console.log('Boxster loaded');
 });
-loadModel('src/assets/civic/scene.gltf', 500, 0,45, function() {
+loadModel('/assets/civic/scene.gltf', 500, 0,45, function() {
     console.log('Civic loaded');
 });
-loadModel('src/assets/focus/scene.gltf', 500, 0,60, function() {
+loadModel('/assets/focus/scene.gltf', 500, 0,60, function() {
     console.log('Focus loaded');
 });
 
@@ -128,7 +128,7 @@ loadModel('src/assets/focus/scene.gltf', 500, 0,60, function() {
 
 
 // Load OBJ Model
-objLoader.load('src/assets/USARoad.obj', function (obj) {
+objLoader.load('/assets/USARoad.obj', function (obj) {
     obj.scale.set(5, 5, 5); // Scale the model appropriately
     obj.position.set(0, 0, 0); // Position the model
     obj.rotation.x = -Math.PI / 2; // Rotate to lie flat
