@@ -29,7 +29,7 @@ controls.update();
 // scene.add(ambientLight);
 
 // Add Directional Light
-const sunlight = new THREE.DirectionalLight(0xffffff, 1);
+const sunlight = new THREE.DirectionalLight(0xffffff, 5);
 sunlight.position.set(50, 50, 50);
 sunlight.castShadow = true;
 
@@ -44,9 +44,10 @@ sunlight.shadow.camera.far = 500;
 // // Optional: Add helper to visualize shadow camera
 // const shadowHelper = new THREE.CameraHelper(sunlight.shadow.camera);
 // scene.add(shadowHelper);
+sunlight.shadow.bias = -0.001;
 
-sunlight.shadow.mapSize.width = 1024;
-sunlight.shadow.mapSize.height = 1024;
+sunlight.shadow.mapSize.width = 4096;
+sunlight.shadow.mapSize.height = 4096;
 scene.add(sunlight);
 
 // Add Ground Plane to Receive Shadows
@@ -61,30 +62,40 @@ scene.add(ground);
 const gltfLoader = new GLTFLoader();
 const objLoader = new OBJLoader();
 
+const cars = {};  // Object to store original and cloned car references
 
-// Function to handle GLTF model loading
-function loadModel(path, scale, positionY = 0,counter =0, callback) {
+function loadModel(name, path, scale, positionY = 0, counter = 0, callback) {
     gltfLoader.load(path, function (gltf) {
         const model = gltf.scene;
         model.scale.set(scale, scale, scale);
-        model.position.set(-counter, positionY, -90); // Use counter for x-position
+        model.position.set(-counter, positionY, -90);
         model.castShadow = true;
         model.receiveShadow = true;
 
-        // Traverse the model to ensure all meshes cast and receive shadows
-        model.traverse(function(child) {
+        // Initialize an array for this car if it doesn't exist yet
+        if (!cars[name]) {
+            cars[name] = [];
+        }
+
+        // Store the original model
+        cars[name].push(model);
+
+        // Traverse to apply shadow properties
+        model.traverse(function (child) {
             if (child.isMesh) {
                 child.castShadow = true;
                 child.receiveShadow = true;
+                child.renderOrder = 1;
                 if (child.material) {
                     child.material = child.material.clone();
+                    child.material.depthWrite = true;
                 }
             }
         });
 
         scene.add(model);
 
-        // Create clones in different orientations
+        // Create clones with different orientations
         const rotations = [Math.PI, Math.PI / 2, -Math.PI / 2];
         const positions = [
             new THREE.Vector3(counter, positionY, 90),    // Clone 1
@@ -92,35 +103,39 @@ function loadModel(path, scale, positionY = 0,counter =0, callback) {
             new THREE.Vector3(90, positionY, -counter)    // Clone 3
         ];
 
-        // Iterate through each rotation and position to create clones
         rotations.forEach((rot, index) => {
             const clone = model.clone();
             clone.rotation.y = rot;
             clone.position.copy(positions[index]);
+
+            // Store each clone
+            cars[name].push(clone);
+
+            // Add clone to scene
             scene.add(clone);
         });
 
-
         if (callback) callback(model);
     }, undefined, function (error) {
-        console.error('Error loading GLTF model:', error); // Log any errors
+        console.error('Error loading GLTF model:', error);
     });
 }
 
+
 // Load Models with Appropriate Scales and Positions
-loadModel('/assets/shelby/scene.gltf', 450, 0,0, function() {
+loadModel('Mustang','/assets/shelby/scene.gltf', 450, 0,0, function() {
     console.log('Shelby loaded');
 });
-loadModel('/assets/porsche/scene.gltf', 5, 0.55,15, function() {
+loadModel('Porsche','/assets/porsche/scene.gltf', 5, 0.55,15, function() {
     console.log('Porsche loaded');
 });
-loadModel('/assets/boxster/scene.gltf', 1.35, 3.9,30, function() {
+loadModel('Boxster','/assets/boxster/scene.gltf', 1.35, 3.9,30, function() {
     console.log('Boxster loaded');
 });
-loadModel('/assets/civic/scene.gltf', 500, 0,45, function() {
+loadModel('Civic','/assets/civic/scene.gltf', 500, 0,45, function() {
     console.log('Civic loaded');
 });
-loadModel('/assets/focus/scene.gltf', 500, 0,60, function() {
+loadModel('Focus','/assets/focus/scene.gltf', 500, 0,60, function() {
     console.log('Focus loaded');
 });
 
@@ -140,8 +155,10 @@ objLoader.load('/assets/USARoad.obj', function (obj) {
         if (child.isMesh) {
             child.castShadow = true;
             child.receiveShadow = true;
+            child.renderOrder = 1;
             if (child.material) {
                 child.material = child.material.clone();
+                child.material.depthWrite = true;
             }
         }
     });
@@ -204,7 +221,37 @@ function animate() {
 
     controls.update(); // Update controls for damping
     renderer.render(scene, camera); // Render the scene
+
+    // // Move Shelby car and its clones
+    // if (cars['Mustang']) {
+    //     cars['Mustang'].forEach((car) => {
+    //         if (car.position.x < 100) {
+    //             car.position.x += 1;
+    //         } else {
+    //             car.position.x = -100;
+    //         }
+    //     });
+    // }
+
+    // // Move Porsche car and its clones
+    // if (cars['Porsche']) {
+    //     cars['Porsche'].forEach((car) => {
+    //         if (car.position.x < 100) {
+    //             car.position.x += 2;
+    //         } else {
+    //             car.position.x = -100;
+    //         }
+    //     });
+    // }
+
+    if (cars['Focus']) {
+        const secondClone = cars['Focus'][2]; // Second clone
+        if (secondClone.position.x < 500) {
+            secondClone.position.x += 2;
+        } else {
+            secondClone.position.x = -500;
+        }
+    }
 }
 
 animate();
-
