@@ -5,70 +5,61 @@ import { OrbitControls } from '../node_modules/three/examples/jsm/controls/Orbit
 import "../styles.css";
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
 
-// Enable shadow maps in the renderer
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;  // Enable shadows in renderer
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;  // Soft shadows for realism
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
-controls.minPolarAngle = 0;               
-controls.maxPolarAngle = Math.PI / 2; 
-controls.enableDamping = true; 
+controls.minPolarAngle = 0;
+controls.maxPolarAngle = Math.PI / 2;
+controls.enableDamping = true;
 controls.dampingFactor = 0.1;
 
-// Position the camera
 camera.position.set(15, 25, 150);
 controls.update();
 
-// Add Ambient Light
-// const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
-// scene.add(ambientLight);
-
-// Add Directional Light
 const sunlight = new THREE.DirectionalLight(0xffffff, 5);
 sunlight.position.set(50, 50, 50);
 sunlight.castShadow = true;
-
-// Configure shadow camera to encompass the scene
 sunlight.shadow.camera.left = -200;
 sunlight.shadow.camera.right = 200;
 sunlight.shadow.camera.top = 200;
 sunlight.shadow.camera.bottom = -200;
 sunlight.shadow.camera.near = 0.5;
 sunlight.shadow.camera.far = 500;
-
-// // Optional: Add helper to visualize shadow camera
-// const shadowHelper = new THREE.CameraHelper(sunlight.shadow.camera);
-// scene.add(shadowHelper);
 sunlight.shadow.bias = -0.001;
-
 sunlight.shadow.mapSize.width = 4096;
 sunlight.shadow.mapSize.height = 4096;
-scene.add(sunlight);
 
-// Add Ground Plane to Receive Shadows
+scene.add(sunlight);
+//scene.add(new THREE.AmbientLight(0x404040)); // Add ambient light
+
 const planeGeometry = new THREE.PlaneGeometry(1000, 1000);
 const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.5 });
 const ground = new THREE.Mesh(planeGeometry, planeMaterial);
-ground.rotation.x = -Math.PI / 2; // Make the plane horizontal
-ground.position.y = -1; // Position it below your models
-ground.receiveShadow = true; // Enable shadow reception
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -1;
+ground.receiveShadow = true;
 scene.add(ground);
 
 const gltfLoader = new GLTFLoader();
 const objLoader = new OBJLoader();
 
+/*const loadedCars = [];
+let selectedCarIndex = 0; // Initially select the first car
+const carMovementSpeed = 1;*/
+
 const cars = {};  // Object to store original and cloned car references
 
 function loadModel(name, path, scale, positionY = 0, counter = 0, callback) {
-    gltfLoader.load(path, function (gltf) {
+    gltfLoader.load(path, (gltf) => {
         const model = gltf.scene;
         model.scale.set(scale, scale, scale);
-        model.position.set(-counter, positionY, -90);
+        model.position.set(-counter, positionY, -90); // Use counter for x-position
         model.castShadow = true;
         model.receiveShadow = true;
 
@@ -80,47 +71,55 @@ function loadModel(name, path, scale, positionY = 0, counter = 0, callback) {
         // Store the original model
         cars[name].push(model);
 
-        // Traverse to apply shadow properties
-        model.traverse(function (child) {
+        model.traverse(child => {
             if (child.isMesh) {
                 child.castShadow = true;
                 child.receiveShadow = true;
-                child.renderOrder = 1;
-                if (child.material) {
-                    child.material = child.material.clone();
-                    child.material.depthWrite = true;
-                }
+                child.material = child.material.clone();
+                child.material.depthWrite = true;
             }
         });
 
         scene.add(model);
+        //loadedCars.push(model);
 
-        // Create clones with different orientations
+        // Create clones in different orientations
         const rotations = [Math.PI, Math.PI / 2, -Math.PI / 2];
         const positions = [
-            new THREE.Vector3(counter, positionY, 90),    // Clone 1
-            new THREE.Vector3(-90, positionY, counter),   // Clone 2
-            new THREE.Vector3(90, positionY, -counter)    // Clone 3
+            new THREE.Vector3(counter, positionY, 90),    
+            new THREE.Vector3(-90, positionY, counter),   
+            new THREE.Vector3(90, positionY, -counter)    
         ];
 
         rotations.forEach((rot, index) => {
             const clone = model.clone();
             clone.rotation.y = rot;
             clone.position.copy(positions[index]);
-
             // Store each clone
             cars[name].push(clone);
-
-            // Add clone to scene
             scene.add(clone);
         });
 
         if (callback) callback(model);
-    }, undefined, function (error) {
-        console.error('Error loading GLTF model:', error);
+    }, undefined, (error) => {
+        console.error('Error loading GLTF model:', error); // Log any errors
     });
 }
 
+/*// Load the cars
+const carModels = [
+    { path: '/assets/shelby/scene.gltf', scale: 450, positionY: 0, counter: 0 },
+    { path: '/assets/porsche/scene.gltf', scale: 5, positionY: 0.55, counter: 15 },
+    { path: '/assets/boxster/scene.gltf', scale: 1.35, positionY: 3.9, counter: 30 },
+    { path: '/assets/civic/scene.gltf', scale: 500, positionY: 0, counter: 45 },
+    { path: '/assets/focus/scene.gltf', scale: 500, positionY: 0, counter: 60 }
+];
+
+carModels.forEach(({ path, scale, positionY, counter }) => {
+    loadModel(path, scale, positionY, counter, () => {
+        console.log(`${path} loaded`);
+    });
+}); */
 
 // Load Models with Appropriate Scales and Positions
 loadModel('Mustang','/assets/shelby/scene.gltf', 450, 0,0, function() {
@@ -139,32 +138,23 @@ loadModel('Focus','/assets/focus/scene.gltf', 500, 0,60, function() {
     console.log('Focus loaded');
 });
 
+// Load OBJ model for the road
+objLoader.load('/assets/USARoad.obj', (obj) => {
+    obj.scale.set(5, 5, 5);
+    obj.position.set(0, 0, 0);
+    obj.rotation.x = -Math.PI / 2;
+    obj.castShadow = true;
+    obj.receiveShadow = true;
 
-
-
-// Load OBJ Model
-objLoader.load('/assets/USARoad.obj', function (obj) {
-    obj.scale.set(5, 5, 5); // Scale the model appropriately
-    obj.position.set(0, 0, 0); // Position the model
-    obj.rotation.x = -Math.PI / 2; // Rotate to lie flat
-    obj.castShadow = true; 
-    obj.receiveShadow = true; 
-
-    // Ensure all child meshes cast and receive shadows
-    obj.traverse(function(child) {
+    obj.traverse(child => {
         if (child.isMesh) {
             child.castShadow = true;
             child.receiveShadow = true;
-            child.renderOrder = 1;
-            if (child.material) {
-                child.material = child.material.clone();
-                child.material.depthWrite = true;
-            }
+            child.material = child.material.clone();
         }
     });
-
     scene.add(obj);
-}, undefined, function (error) {
+}, undefined, (error) => {
     console.error('Error loading OBJ model:', error);
 });
 
@@ -177,10 +167,16 @@ window.addEventListener('resize', function () {
     camera.updateProjectionMatrix();
 });
 
-
-
 // Movement speed for the light
 const lightMovementSpeed = 5;
+
+// Event listener for car selection
+window.addEventListener('keydown', (event) => {
+    if (event.key >= '1' && event.key <= '5') {
+        selectedCarIndex = parseInt(event.key) - 1; // Select car based on key pressed
+        console.log(`Car ${selectedCarIndex + 1} selected`);
+    }
+});
 
 // Event listener for keydown events
 window.addEventListener('keydown', function(event) {
@@ -244,8 +240,8 @@ function animate() {
     //     });
     // }
 
-    if (cars['Focus']) {
-        const secondClone = cars['Focus'][2]; // Second clone
+    if (cars['Mustang']) {
+        const secondClone = cars['Mustang'][2]; // Second clone
         if (secondClone.position.x < 500) {
             secondClone.position.x += 2;
         } else {
