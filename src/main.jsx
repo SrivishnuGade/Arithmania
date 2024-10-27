@@ -240,8 +240,8 @@ function animate() {
     //     });
     // }
 
-    if (cars['Mustang']) {
-        const secondClone = cars['Mustang'][2]; // Second clone
+    if (cars['Focus']) {
+        const secondClone = cars['Focus'][2]; // Second clone
         if (secondClone.position.x < 500) {
             secondClone.position.x += 2;
         } else {
