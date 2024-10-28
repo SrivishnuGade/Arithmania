@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from '../node_modules/three/examples/jsm/loaders/GLTFLoader.js';
 import { OBJLoader } from '../node_modules/three/examples/jsm/loaders/OBJLoader.js';
 import { OrbitControls } from '../node_modules/three/examples/jsm/controls/OrbitControls.js';
-import { Sky } from '../node_modules/three/examples/jsm/objects/Sky.js';  // Sky shader
+import { Sky } from '../node_modules/three/examples/jsm/objects/Sky.js'; // Sky shader
+import NippleJS from 'nipplejs'; // Import nipplejs
 import "../styles.css";
 
 const scene = new THREE.Scene();
@@ -54,7 +55,7 @@ scene.add(sky);
 
 const skyUniforms = sky.material.uniforms;
 const sun = new THREE.Vector3();
-const elevation = 15;  // adjust for desired sun angle
+const elevation = 15; // adjust for desired sun angle
 const azimuth = 180;
 
 // Function to update sun position based on elevation and azimuth
@@ -72,6 +73,7 @@ const gltfLoader = new GLTFLoader();
 const objLoader = new OBJLoader();
 
 const cars = {}; // Object to store original and cloned car references
+let selectedCar = null; // Track the selected car
 
 function loadModel(name, path, scale, positionY = 0, counter = 0, callback) {
     gltfLoader.load(path, (gltf) => {
@@ -118,19 +120,19 @@ function loadModel(name, path, scale, positionY = 0, counter = 0, callback) {
 }
 
 // Load models
-loadModel('Mustang','/assets/shelby/scene.gltf', 450, 0,0, function() {
+loadModel('Mustang', '/assets/shelby/scene.gltf', 450, 0, 0, function () {
     console.log('Shelby loaded');
 });
-loadModel('Porsche','/assets/porsche/scene.gltf', 5, 0.55,15, function() {
+loadModel('Porsche', '/assets/porsche/scene.gltf', 5, 0.55, 15, function () {
     console.log('Porsche loaded');
 });
-loadModel('Boxster','/assets/boxster/scene.gltf', 1.35, 3.9,30, function() {
+loadModel('Boxster', '/assets/boxster/scene.gltf', 1.35, 3.9, 30, function () {
     console.log('Boxster loaded');
 });
-loadModel('Civic','/assets/civic/scene.gltf', 500, 0,45, function() {
+loadModel('Civic', '/assets/civic/scene.gltf', 500, 0, 45, function () {
     console.log('Civic loaded');
 });
-loadModel('Focus','/assets/focus/scene.gltf', 500, 0,60, function() {
+loadModel('Focus', '/assets/focus/scene.gltf', 500, 0, 60, function () {
     console.log('Focus loaded');
 });
 
@@ -162,10 +164,45 @@ window.addEventListener('resize', function () {
     camera.updateProjectionMatrix();
 });
 
+// Joystick setup
+const joystickArea = document.createElement('div');
+joystickArea.style.position = 'absolute';
+joystickArea.style.left = '20px';
+joystickArea.style.top = '20px';
+joystickArea.style.width = '100px';
+joystickArea.style.height = '100px';
+joystickArea.style.zIndex = '1000'; // Ensure it's above other elements
+document.body.appendChild(joystickArea);
+
+const joystick = NippleJS.create({
+    zone: joystickArea,
+    size: 150,
+    color: 'blue',
+    position: { left: '50%', top: '50%' },
+    restOpacity: 0.5,
+    fadeTime: 100,
+});
+
+// Joystick event handling
+joystick.on('move', (event, data) => {
+    if (selectedCar) {
+        const speed = 0.5; // Speed factor for the car movement
+        // Normalize the joystick position to get direction
+        const direction = new THREE.Vector3(data.position.x / 75, 0, data.position.y / 75).normalize(); // Adjusted for joystick size
+        selectedCar.position.add(direction.multiplyScalar(speed));
+    }
+});
+
+joystick.on('end', () => {
+    if (selectedCar) {
+        // Optional: Stop the car when the joystick is released
+    }
+});
+
 // Light movement control
 const lightMovementSpeed = 5;
 
-window.addEventListener('keydown', function(event) {
+window.addEventListener('keydown', function (event) {
     switch (event.key) {
         case 'w': sunlight.position.y += lightMovementSpeed; break;
         case 's': sunlight.position.y -= lightMovementSpeed; break;
@@ -173,6 +210,11 @@ window.addEventListener('keydown', function(event) {
         case 'd': sunlight.position.x += lightMovementSpeed; break;
         case 'z': sunlight.position.z -= lightMovementSpeed; break;
         case 'x': sunlight.position.z += lightMovementSpeed; break;
+        case '1': selectedCar = cars['Mustang'][0]; break; // Select Mustang
+        case '2': selectedCar = cars['Porsche'][0]; break; // Select Porsche
+        case '3': selectedCar = cars['Boxster'][0]; break; // Select Boxster
+        case '4': selectedCar = cars['Civic'][0]; break; // Select Civic
+        case '5': selectedCar = cars['Focus'][0]; break; // Select Focus
         default: break;
     }
 });
@@ -184,12 +226,8 @@ function animate() {
     renderer.render(scene, camera);
 
     if (cars['Focus']) {
-        const secondClone = cars['Focus'][2];
-        if (secondClone.position.x < 500) {
-            secondClone.position.x += 2;
-        } else {
-            secondClone.position.x = -500;
-        }
+        const focusCar = cars['Focus'][0];
+        focusCar.rotation.y += 0.01; // Optional rotation for Focus car
     }
 }
 
