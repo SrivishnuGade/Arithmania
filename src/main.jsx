@@ -6,7 +6,10 @@ import NippleJS from 'nipplejs'; // Import joystick library
 import "../styles.css";
 
 const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x87CEEB, 200, 1200); // Add fog to the scene for depth
+
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
+camera.position.set(15, 25, 150);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -20,22 +23,10 @@ controls.maxPolarAngle = Math.PI / 2;
 controls.enableDamping = true;
 controls.dampingFactor = 0.1;
 
-camera.position.set(15, 25, 150);
-controls.update();
-
 // Sunlight setup
 const sunlight = new THREE.DirectionalLight(0xffffff, 5);
 sunlight.position.set(50, 50, 50);
 sunlight.castShadow = true;
-sunlight.shadow.camera.left = -200;
-sunlight.shadow.camera.right = 200;
-sunlight.shadow.camera.top = 200;
-sunlight.shadow.camera.bottom = -200;
-sunlight.shadow.camera.near = 0.5;
-sunlight.shadow.camera.far = 500;
-sunlight.shadow.bias = -0.001;
-sunlight.shadow.mapSize.width = 4096;
-sunlight.shadow.mapSize.height = 4096;
 scene.add(sunlight);
 
 // Ground setup
@@ -50,8 +41,8 @@ scene.add(ground);
 // Gradient Sky Shader
 const skyShader = {
     uniforms: {
-        "topColor": { value: new THREE.Color(0x87CEEB) }, // Sky blue at top
-        "bottomColor": { value: new THREE.Color(0xB0E0E6) }, // Lighter blue near the horizon
+        "topColor": { value: new THREE.Color(0xB3DAE8) }, // Sky blue at top
+        "bottomColor": { value: new THREE.Color(0xB3DAE8) }, // Lighter blue near horizon
         "offset": { value: 33 },
         "exponent": { value: 0.6 }
     },
@@ -87,11 +78,24 @@ const skyGeometry = new THREE.SphereGeometry(1000, 32, 15);
 const sky = new THREE.Mesh(skyGeometry, skyMaterial);
 scene.add(sky);
 
+// Cloud setup
+const cloudTexture = new THREE.TextureLoader().load('/assets/images/clouds.jpg'); // Load cloud texture
+const cloudMaterial = new THREE.SpriteMaterial({ map: cloudTexture, transparent: false, opacity: 0.7 });
+const clouds = [];
+
+for (let i = 0; i < 30; i++) {
+    const cloud = new THREE.Sprite(cloudMaterial);
+    cloud.scale.set(50, 25, 1); // Smaller size for clouds
+    cloud.position.set(Math.random() * 1000 - 500, Math.random() * 1 + 150, Math.random() * 1000 - 500); // Positioned near the ceiling
+    clouds.push(cloud);
+    scene.add(cloud);
+}
+
+// Model loading and setup
 const gltfLoader = new GLTFLoader();
 const objLoader = new OBJLoader();
-
-const cars = {}; // Object to store original and cloned car references
-let selectedCar = null; // Track the selected car
+const cars = {};
+let selectedCar = null;
 
 function loadModel(name, path, scale, positionY = 0, counter = 0, callback) {
     gltfLoader.load(path, (gltf) => {
@@ -99,21 +103,6 @@ function loadModel(name, path, scale, positionY = 0, counter = 0, callback) {
         model.scale.set(scale, scale, scale);
         model.position.set(-counter, positionY, -90);
         model.castShadow = true;
-        model.receiveShadow = true;
-
-        if (!cars[name]) {
-            cars[name] = [];
-        }
-        cars[name].push(model);
-
-        model.traverse(child => {
-            if (child.isMesh) {
-                child.castShadow = true;
-                child.receiveShadow = true;
-                child.material = child.material.clone();
-                child.material.depthWrite = true;
-            }
-        });
         scene.add(model);
 
         const rotations = [Math.PI, Math.PI / 2, -Math.PI / 2];
@@ -127,50 +116,25 @@ function loadModel(name, path, scale, positionY = 0, counter = 0, callback) {
             const clone = model.clone();
             clone.rotation.y = rot;
             clone.position.copy(positions[index]);
-            cars[name].push(clone);
             scene.add(clone);
         });
 
         if (callback) callback(model);
-    }, undefined, (error) => {
-        console.error('Error loading GLTF model:', error);
     });
 }
 
-// Load models
-loadModel('Mustang', '/assets/shelby/scene.gltf', 450, 0, 0, function () {
-    console.log('Shelby loaded');
-});
-loadModel('Porsche', '/assets/porsche/scene.gltf', 5, 0.55, 15, function () {
-    console.log('Porsche loaded');
-});
-loadModel('Boxster', '/assets/boxster/scene.gltf', 1.35, 3.9, 30, function () {
-    console.log('Boxster loaded');
-});
-loadModel('Civic', '/assets/civic/scene.gltf', 500, 0, 45, function () {
-    console.log('Civic loaded');
-});
-loadModel('Focus', '/assets/focus/scene.gltf', 500, 0, 60, function () {
-    console.log('Focus loaded');
-});
+loadModel('Mustang', '/assets/shelby/scene.gltf', 450, 0, 0, function () { console.log('Shelby loaded'); });
+loadModel('Porsche', '/assets/porsche/scene.gltf', 5, 0.55, 15, function () { console.log('Porsche loaded'); });
+loadModel('Boxster', '/assets/boxster/scene.gltf', 1.35, 3.9, 30, function () { console.log('Boxster loaded'); });
+loadModel('Civic', '/assets/civic/scene.gltf', 500, 0, 45, function () { console.log('Civic loaded'); });
+loadModel('Focus', '/assets/focus/scene.gltf', 500, 0, 60, function () { console.log('Focus loaded'); });
 
-// Load OBJ model for road
+// Road setup
 objLoader.load('/assets/USARoad.obj', (obj) => {
     obj.scale.set(5, 5, 5);
-    obj.position.set(0, 0, 0);
     obj.rotation.x = -Math.PI / 2;
     obj.castShadow = true;
-    obj.receiveShadow = true;
-    obj.traverse(child => {
-        if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-            child.material = child.material.clone();
-        }
-    });
     scene.add(obj);
-}, undefined, (error) => {
-    console.error('Error loading OBJ model:', error);
 });
 
 // Resize handler
@@ -189,7 +153,6 @@ joystickArea.style.left = '20px';
 joystickArea.style.top = '20px';
 joystickArea.style.width = '100px';
 joystickArea.style.height = '100px';
-joystickArea.style.zIndex = '1000'; // Ensure it's above other elements
 document.body.appendChild(joystickArea);
 
 const joystick = NippleJS.create({
@@ -201,10 +164,9 @@ const joystick = NippleJS.create({
     fadeTime: 100,
 });
 
-// Joystick event handling
 joystick.on('move', (event, data) => {
     if (selectedCar) {
-        const speed = 0.5; // Speed factor for the car movement
+        const speed = 0.5;
         const direction = new THREE.Vector3(data.position.x / 75, 0, data.position.y / 75).normalize();
         selectedCar.position.add(direction.multiplyScalar(speed));
     }
@@ -237,6 +199,13 @@ window.addEventListener('keydown', function (event) {
 
 function animate() {
     requestAnimationFrame(animate);
+
+    // Animate cloud movement
+    clouds.forEach(cloud => {
+        cloud.position.x += 0.1;
+        if (cloud.position.x > 500) cloud.position.x = -500;
+    });
+
     controls.update();
     renderer.render(scene, camera);
 }
