@@ -23,15 +23,24 @@ controls.maxPolarAngle = Math.PI / 2;
 controls.enableDamping = true;
 controls.dampingFactor = 0.1;
 
-// Sunlight setup
-const sunlight = new THREE.DirectionalLight(0xffffff, 5);
-sunlight.position.set(50, 50, 50);
+// Adjust Sunlight setup
+const sunlight = new THREE.DirectionalLight(0xffffff, 3); // Adjusted intensity
+sunlight.position.set(100, 150, 100); // Adjusted position for better shadow casting
 sunlight.castShadow = true;
+sunlight.shadow.camera.left = -500;
+sunlight.shadow.camera.right = 500;
+sunlight.shadow.camera.top = 500;
+sunlight.shadow.camera.bottom = -500;
+sunlight.shadow.camera.near = 0.5;
+sunlight.shadow.camera.far = 1000;
+sunlight.shadow.bias = -0.0005;
+sunlight.shadow.mapSize.width = 4096;
+sunlight.shadow.mapSize.height = 4096;
 scene.add(sunlight);
 
-// Ground setup
+// Updated Ground setup
 const planeGeometry = new THREE.PlaneGeometry(1000, 1000);
-const planeMaterial = new THREE.ShadowMaterial({ opacity: 0.5 });
+const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
 const ground = new THREE.Mesh(planeGeometry, planeMaterial);
 ground.rotation.x = -Math.PI / 2;
 ground.position.y = -1;
@@ -102,7 +111,14 @@ function loadModel(name, path, scale, positionY = 0, counter = 0, callback) {
         const model = gltf.scene;
         model.scale.set(scale, scale, scale);
         model.position.set(-counter, positionY, -90);
-        model.castShadow = true;
+        //model.castShadow = true;
+        // Set castShadow on each mesh in the model
+        model.traverse((node) => {
+            if (node.isMesh) {
+                node.castShadow = true;
+                node.receiveShadow = true;
+            }
+        });
         scene.add(model);
 
         const rotations = [Math.PI, Math.PI / 2, -Math.PI / 2];
@@ -133,7 +149,14 @@ loadModel('Focus', '/assets/focus/scene.gltf', 500, 0, 60, function () { console
 objLoader.load('/assets/USARoad.obj', (obj) => {
     obj.scale.set(5, 5, 5);
     obj.rotation.x = -Math.PI / 2;
+    obj.traverse((node) => {
+        if (node.isMesh) {
+            node.castShadow = true;
+            node.receiveShadow = true;
+        }
+    });
     obj.castShadow = true;
+    obj.receiveShadow = true;
     scene.add(obj);
 });
 
