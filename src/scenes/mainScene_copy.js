@@ -7,7 +7,7 @@ import { initGround } from '../environment/ground.js';
 import { initSky } from '../environment/sky.js';
 import { loadModel } from '../loaders/gltfloader.js';
 import { loadRoad } from '../loaders/objloader.js';
-import { createJoystick, resetJoystick, removeJoystickControl, setupJoystick } from '../controls/joystickcontrols.js';
+import { setupJoystick } from '../controls/joystickcontrols.js';
 
 const scene = new THREE.Scene();
 initFog(scene);
@@ -42,38 +42,21 @@ for (let i = 0; i < 30; i++) {
     scene.add(cloud);
 }
     
-// Define joystick element and active car
-//let joystickElement = null;
-let activeCar = null; 
-
-// Function called when a car model is loaded
-function onCarLoaded(carModel) {
-    console.log(`${carModel.name} loaded`);
-    carModel.name = 'selectedCar';
-
-    // If there's an active car, remove joystick control from it
-    if (activeCar) {
-        removeJoystickControl(activeCar);
-        resetJoystick(); // Hide the joystick if switching cars
-    }
-
-    // Show the joystick and set up control for the new car model
-    joystickElement.style.display = 'block'; // Show the joystick
-    setupJoystick(scene, camera, carModel);
-    activeCar = carModel;  // Update the active car
-}
-
-
-// Call this function once during the initialization phase
-createJoystick();
-
-// Load models with the new onCarLoaded callback
-loadModel(scene, 'Mustang', '/assets/shelby/scene.gltf', 450, 0, 0, onCarLoaded);
-loadModel(scene, 'Porsche', '/assets/porsche/scene.gltf', 5, 0.55, 15, onCarLoaded);
-loadModel(scene, 'Boxster', '/assets/boxster/scene.gltf', 1.35, 3.9, 30, onCarLoaded);
-loadModel(scene, 'Civic', '/assets/civic/scene.gltf', 500, 0, 45, onCarLoaded);
-loadModel(scene, 'Focus', '/assets/focus/scene.gltf', 500, 0, 60, onCarLoaded);
-
+loadModel(scene, 'Mustang', '/assets/shelby/scene.gltf', 450, 0, 0, function() {
+    console.log('Shelby loaded');
+});
+loadModel(scene, 'Porsche', '/assets/porsche/scene.gltf', 5, 0.55, 15, function() {
+    console.log('Porsche loaded');
+});
+loadModel(scene, 'Boxster', '/assets/boxster/scene.gltf', 1.35, 3.9, 30, function() {
+    console.log('Boxster loaded');
+});
+loadModel(scene, 'Civic', '/assets/civic/scene.gltf', 500, 0, 45, function() {
+    console.log('Civic loaded');
+});
+loadModel(scene, 'Focus', '/assets/focus/scene.gltf', 500, 0, 60, function() {
+    console.log('Focus loaded');
+});
 loadRoad(scene);
 setupJoystick(scene, camera);
 
@@ -158,25 +141,34 @@ for (let i = 0; i < 61; i+=15) {
 }
 
 function setTrafficLightsColors(lists, color) {
-    lists.forEach((indices, i) => {
-        const colorToApply = Array.isArray(color) ? color[i] : color;  // Color can be an array or single value
-        indices.forEach(index => {
-            const trafficLight = trafficLights[index];
-            if (!trafficLight) return;
+    const allIndices = [].concat(...lists);
+    allIndices.forEach(index => {
+        if (index < 0 || index >= trafficLights.length) {
+            console.error(`Invalid traffic light index: ${index}`);
+            return;
+        }
 
-            trafficLight.redLight.material = redMaterialOff;
-            trafficLight.yellowLight.material = yellowMaterialOff;
-            trafficLight.greenLight.material = greenMaterialOff;
+        const trafficLight = trafficLights[index];
 
-            switch (colorToApply) {
-                case 'red': trafficLight.redLight.material = redMaterialOn; break;
-                case 'yellow': trafficLight.yellowLight.material = yellowMaterialOn; break;
-                case 'green': trafficLight.greenLight.material = greenMaterialOn; break;
-            }
-        });
+        trafficLight.redLight.material = redMaterialOff;
+        trafficLight.yellowLight.material = yellowMaterialOff;
+        trafficLight.greenLight.material = greenMaterialOff;
+
+        switch (color) {
+            case "red":
+                trafficLight.redLight.material = redMaterialOn;
+                break;
+            case "yellow":
+                trafficLight.yellowLight.material = yellowMaterialOn;
+                break;
+            case "green":
+                trafficLight.greenLight.material = greenMaterialOn;
+                break;
+            default:
+                console.error("Invalid color specified. Use 'red', 'yellow', or 'green'.");
+        }
     });
 }
-
 
 
 const st1=[2,3,4]
@@ -245,11 +237,12 @@ function stopTrafficSignals() {
 
 
 function switchPattern(event) {
-    if (event.key === '1' || event.key === '2') {
-        currentPattern = parseInt(event.key);
-        stopTrafficSignals();
-        startTrafficSignals();
-        console.log(`Switched to Pattern ${currentPattern}`);
+    if (event.key === '1') {
+        currentPattern = 1;
+        console.log("Switched to Pattern 1");
+    } else if (event.key === '2') {
+        currentPattern = 2;
+        console.log("Switched to Pattern 2");
     }
 }
 
@@ -259,28 +252,16 @@ document.addEventListener('keydown', switchPattern);
 
 startTrafficSignals();
 
-function isRed(r, g, b) {
-    return r > 200 && g < 100 && b < 100; // Adjust thresholds as necessary
-}
 
-function isOrange(r, g, b) {
-    return r > 200 && g > 100 && g < 200 && b < 100; // Adjust thresholds as necessary
-}
 
-function isGreen(r, g, b) {
-    return g > 150 && r < 100 && b < 100; // Adjust thresholds as necessary
-}
-
-function animateCloud() {
+function animate() {
+    requestAnimationFrame(animate);
     clouds.forEach(cloud => {
         cloud.position.x += 0.1;
         if (cloud.position.x > 500) cloud.position.x = -500;
     });
     controls.update();
     renderer.render(scene, camera);
-    requestAnimationFrame(animateCloud);
 }
 
-animateCloud();
-
-
+animate();
