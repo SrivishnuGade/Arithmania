@@ -68,11 +68,33 @@ function onCarLoaded(carModel) {
 createJoystick();
 
 // Load models with the new onCarLoaded callback
-loadModel(scene, 'Mustang', '/assets/shelby/scene.gltf', 450, 0, 0, onCarLoaded);
-loadModel(scene, 'Porsche', '/assets/porsche/scene.gltf', 5, 0.55, 15, onCarLoaded);
-loadModel(scene, 'Boxster', '/assets/boxster/scene.gltf', 1.35, 3.9, 30, onCarLoaded);
-loadModel(scene, 'Civic', '/assets/civic/scene.gltf', 500, 0, 45, onCarLoaded);
-loadModel(scene, 'Focus', '/assets/focus/scene.gltf', 500, 0, 60, onCarLoaded);
+for (let i = 0; i < 5; i++) {
+    loadModel(scene,'Mustang', '/assets/shelby/scene.gltf', 450, 0, 0, i, function() {
+        console.log('Shelby loaded');
+    });
+}
+
+for (let i = 0; i < 7; i++) {
+    loadModel(scene,'Porsche', '/assets/porsche/scene.gltf', 5, 0.55, 15, i, function() {
+        console.log('Porsche loaded');
+    });
+}
+for (let i = 0; i < 10; i++) {
+    loadModel(scene,'Boxster', '/assets/boxster/scene.gltf', 1.35, 3.9, 30, i, function() {
+        console.log('Boxster loaded');
+    });
+}
+ 
+for (let i = 2; i < 3; i++) {
+    loadModel(scene,'Civic', '/assets/civic/scene.gltf', 500, 0, 75, i, function() {
+        console.log('Civic loaded');
+    });
+}
+for (let i = 0; i < 10; i++) {
+    loadModel(scene,'Focus', '/assets/focus/scene.gltf', 500, 0, 60, i, function() {
+        console.log('Focus loaded');
+    });
+}
 
 loadRoad(scene);
 setupJoystick(scene, camera);
