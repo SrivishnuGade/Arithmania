@@ -4,14 +4,11 @@ import * as THREE from 'three'; // Import THREE if not done elsewhere
 
 // Define cars globally within the module (but not in the function)
 const cars = {};
-
-export function loadModel(scene, name, path, scale, positionY = 0, counter = 0, callback) {
-    const gltfLoader = new GLTFLoader();
-
+function loadModel(name, path, scale, positionY = 0, counter = 0,l=0, callback) {
     gltfLoader.load(path, function (gltf) {
         const model = gltf.scene;
         model.scale.set(scale, scale, scale);
-        model.position.set(-counter, positionY, -90);
+        model.position.set(-counter, positionY, -(90+l*30));
         model.castShadow = true;
         model.receiveShadow = true;
 
@@ -28,21 +25,22 @@ export function loadModel(scene, name, path, scale, positionY = 0, counter = 0, 
             if (child.isMesh) {
                 child.castShadow = true;
                 child.receiveShadow = true;
+                child.renderOrder = 1;
                 if (child.material) {
                     child.material = child.material.clone();
+                    child.material.depthWrite = true;
                 }
             }
         });
 
-        // Add the original model to the scene
         scene.add(model);
 
         // Create clones with different orientations
         const rotations = [Math.PI, Math.PI / 2, -Math.PI / 2];
         const positions = [
-            new THREE.Vector3(counter, positionY, 90),    // Clone 1
-            new THREE.Vector3(-90, positionY, counter),   // Clone 2
-            new THREE.Vector3(90, positionY, -counter)    // Clone 3
+            new THREE.Vector3(counter, positionY, (90+l*30)),    // Clone 1
+            new THREE.Vector3(-(90+l*30), positionY, counter),   // Clone 2
+            new THREE.Vector3((90+l*30), positionY, -counter)    // Clone 3
         ];
 
         rotations.forEach((rot, index) => {
@@ -57,7 +55,6 @@ export function loadModel(scene, name, path, scale, positionY = 0, counter = 0, 
             scene.add(clone);
         });
 
-        // Execute callback if provided
         if (callback) callback(model);
     }, undefined, function (error) {
         console.error('Error loading GLTF model:', error);

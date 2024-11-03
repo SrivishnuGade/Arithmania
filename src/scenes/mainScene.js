@@ -42,21 +42,34 @@ for (let i = 0; i < 30; i++) {
     scene.add(cloud);
 }
     
-loadModel(scene, 'Mustang', '/assets/shelby/scene.gltf', 450, 0, 0, function() {
-    console.log('Shelby loaded');
-});
-loadModel(scene, 'Porsche', '/assets/porsche/scene.gltf', 5, 0.55, 15, function() {
-    console.log('Porsche loaded');
-});
-loadModel(scene, 'Boxster', '/assets/boxster/scene.gltf', 1.35, 3.9, 30, function() {
-    console.log('Boxster loaded');
-});
-loadModel(scene, 'Civic', '/assets/civic/scene.gltf', 500, 0, 45, function() {
-    console.log('Civic loaded');
-});
-loadModel(scene, 'Focus', '/assets/focus/scene.gltf', 500, 0, 60, function() {
-    console.log('Focus loaded');
-});
+for (let i = 0; i < 5; i++) {
+    loadModel('Mustang', '/assets/shelby/scene.gltf', 450, 0, 0, i, function() {
+        console.log('Shelby loaded');
+    });
+}
+
+for (let i = 0; i < 7; i++) {
+    loadModel('Porsche', '/assets/porsche/scene.gltf', 5, 0.55, 15, i, function() {
+        console.log('Porsche loaded');
+    });
+}
+for (let i = 0; i < 10; i++) {
+    loadModel('Boxster', '/assets/boxster/scene.gltf', 1.35, 3.9, 30, i, function() {
+        console.log('Boxster loaded');
+    });
+}
+ 
+for (let i = 2; i < 3; i++) {
+    loadModel('Civic', '/assets/civic/scene.gltf', 500, 0, 75, i, function() {
+        console.log('Civic loaded');
+    });
+}
+for (let i = 0; i < 10; i++) {
+    loadModel('Focus', '/assets/focus/scene.gltf', 500, 0, 60, i, function() {
+        console.log('Focus loaded');
+    });
+}
+
 loadRoad(scene);
 setupJoystick(scene, camera);
 
