@@ -14,7 +14,7 @@ const scene = new THREE.Scene();
 initFog(scene);
 
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
-camera.position.set(15, 25, 150);
+camera.position.set(30, 75, 350);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -76,210 +76,6 @@ Promise.all([
     // loadModel(scene,'Civic', '/assets/civic/scene.gltf', 500, 0, 75, 12)
 ]).then(() => {
     console.log('All models loaded:', cars);
-}).catch(error => {
-    console.error(error);
-});
-
-
-loadRoad(scene);
-setupJoystick(scene, camera);
-
-
-function moveCarRight(carModel) {
-    let yPosition=carModel.position.y;
-
-        // Create a GSAP timeline for seamless transitions
-        const timeline = gsap.timeline();
-
-        // Add each movement to the timeline
-        timeline.add(() => {
-                    // Step 2: Animate the right turn with radius 60
-                    animateTurn(carModel, () => {
-                        // Step 3: Continue straight along the x-axis from (135, y, -60)
-                        gsap.to(carModel.position, {
-                            duration: 3,
-                            x: 450,
-                            y: yPosition,
-                            z: 60,
-                            onComplete: () => {
-                                console.log('Car reached destination');
-                            }
-                        });
-                    });
-                });
-
-}
-
-function animateTurn(carModel, onComplete) {
-    const radius = 60;
-    const centerX = 75 + radius;  // Center of the turn circle at (135, y, 120)
-    const centerZ = 120;  // Z-position of the circle's center
-    const startAngle = 3*Math.PI/2;  
-    const endAngle = Math.PI;  
-
-    gsap.to(carModel.position, {
-        duration: 1,
-        onUpdate: function () {
-            const angle = startAngle + (endAngle - startAngle) * (1 - this.progress());
-            carModel.position.x = centerX + radius * Math.cos(angle);
-            carModel.position.z = centerZ + radius * Math.sin(angle);
-            carModel.rotation.y = -angle;
-        },
-        onComplete: onComplete
-    });
-}
-
-function animateTurnL1(carModel, onComplete) {
-    const radius = 90;
-    const centerX = 0 - radius;  // Center of the turn circle at (135, y, 120)
-    const centerZ = 60;  // Z-position of the circle's center
-    const startAngle = 3*Math.PI/2;  // 180 degrees (pointing left)
-    const endAngle = 2*Math.PI;  // -90 degrees (pointing down)
-
-    gsap.to(carModel.position, {
-        duration: 1,
-        onUpdate: function () {
-            const angle = startAngle + (endAngle - startAngle) * (1 - this.progress());
-            carModel.position.x = centerX + radius * Math.cos(angle);
-            carModel.position.z = centerZ + radius * Math.sin(angle);
-            carModel.rotation.y = -angle+Math.PI;
-        },
-        onComplete: onComplete
-    });
-}
-
-function moveCarLeft1(carModel) {
-// / Get the second clone
-        let yPosition=carModel.position.y;
-        // Create a GSAP timeline for seamless transitions
-        const timeline = gsap.timeline();
-
-        // Add each movement to the timeline
-        timeline.to(carModel.position, { duration: 0.25, x: 0, y: yPosition, z: 60 })
-                .add(() => {
-                    // Step 2: Animate the right turn with radius 60
-                    animateTurnL1(carModel, () => {
-                        // Step 3: Continue straight along the x-axis from (135, y, -60)
-                        gsap.to(carModel.position, {
-                            duration: 5,
-                            x: -450,
-                            y: yPosition,
-                            z: -30,
-                            onComplete: () => {
-                                console.log('Car reached destination');
-                            }
-                        });
-                    });
-                });
-}
-
-function animateTurnL2(carModel, onComplete) {
-    const radius = 90+15;
-    const centerX = 15 - radius;  // Center of the turn circle at (135, y, 120)
-    const centerZ = 60;  // Z-position of the circle's center
-    const startAngle = 3*Math.PI/2;  // 180 degrees (pointing left)
-    const endAngle = 2*Math.PI;  // -90 degrees (pointing down)
-
-    gsap.to(carModel.position, {
-        duration: 1,
-        onUpdate: function () {
-            const angle = startAngle + (endAngle - startAngle) * (1 - this.progress());
-            carModel.position.x = centerX + radius * Math.cos(angle);
-            carModel.position.z = centerZ + radius * Math.sin(angle);
-            carModel.rotation.y = -angle+Math.PI;
-        },
-        onComplete: onComplete
-    });
-}
-
-function moveCarLeft2(carModel) {
-    let yPosition=carModel.position.y;
-
-        // Create a GSAP timeline for seamless transitions
-        const timeline = gsap.timeline();
-
-        // Add each movement to the timeline
-        timeline.to(carModel.position, { duration: 0.25, x: 15, y: yPosition, z: 60 })
-                .add(() => {
-                    // Step 2: Animate the right turn with radius 60
-                    animateTurnL2(carModel, () => {
-                        // Step 3: Continue straight along the x-axis from (135, y, -60)
-                        gsap.to(carModel.position, {
-                            duration: 5,
-                            x: -450,
-                            y: yPosition,
-                            z: -45,
-                            onComplete: () => {
-                                console.log('Car reached destination');
-                            }
-                        });
-                    });
-                });
-}
-
-function moveCarStraight(carModel) {
-    let yPosition=carModel.position.y;
-    gsap.to(carModel.position, {
-        duration: 5,
-        x: carModel.position.x,
-        y: yPosition,
-        z: -450,
-        onComplete: () => {
-            console.log('Car reached destination');
-        }
-    });
-}
-
-function changeLane(car,dir){
-    let currentZ=car.position.z;
-    let currentX=car.position.x;
-    const timeline = gsap.timeline();
-    currentZ -= 30;
-    if(dir=='left'){currentX -= 15;}else if(dir=='right'){currentX += 15;}
-
-    timeline.to(car.position, {
-        duration: 0.25,
-        x: currentX,
-        y: car.position.y,
-        z: currentZ
-    });
-}
-
-function moveCarFront(car) {
-    let currentZ=car.position.z;
-    const timeline = gsap.timeline();
-    
-    // Move car forward by 30 units on the z-axis
-    currentZ -= 30;
-    
-    timeline.to(car.position, { 
-        duration: 0.25, // Update the duration to match the interval
-        x: car.position.x,          // Keep x constant
-        y: car.position.y,          // Keep y constant
-        z: currentZ     // Use updated z position
-    });
-}
-setTimeout(() => {
-    console.log('Cars object:', cars); // Check if the cars object is populated
-}, 2000);
-
-
-//Define a list containing lists of diffrent sizes
-let occ2 = [  [0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0], 
-                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0]
-            ];
-
-
-
-
-let occ_pos=[];
-
-// Repeatedly call moveCarFront every 0.25 seconds
-setTimeout(() => {
     setInterval(() => {
         // Define the cars you want to include in the loop
         const carModels = [
@@ -333,9 +129,11 @@ setTimeout(() => {
                         console.log('right');
                         occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
                     }
-                    else
-
-                    if ((position !== 0 || light=='green') && !occ_pos.some(pos => pos[0] === lane && pos[1] === position - 1)) {
+                    else if (car.position.z <= 140 && car.position.x===75) {
+                        moveCarRight(car);
+                        occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    }
+                    else if ((position !== 0 || light=='green') && !occ_pos.some(pos => pos[0] === lane && pos[1] === position - 1)) {
                         // Move the car forward
      
                         
@@ -373,39 +171,979 @@ setTimeout(() => {
             });
         });
     }, 250);
-}, 5000);
+    setInterval(() => {
+        const carModels = [
+            [cars['Focus'][4]],
+            [cars['Boxster'][4]],
+            [cars['Focus'][0]],
+            [cars['Boxster'][0]],
+            [cars['Focus'][8]],
+            [cars['Boxster'][8]],
+            [cars['Porsche'][0]],
+            [cars['Porsche'][4]],
+            [cars['Porsche'][8]],
+            [cars['Mustang'][0]],
+            [cars['Mustang'][4]],
+            [cars['Mustang'][8]],
+        ];
+        carModels.forEach(carArray => {
+            carArray.forEach(car => {
+                const lane = Math.floor(-car.position.x / 15);
+                const position = Math.floor((-car.position.z - 90) / 30);
+                let light = 'red';
+    
+                if (lane >= 0 && lane <= 4) {
+                    light = getTrafficLightColor(lane);
+                }
+                if (position >= 0) {
+                    // Insert debugging logs
+                    console.log(`Processing car at lane: ${lane}, position: ${position}`);
+    
+                    if (!occ_pos1.some(pos => pos[0] === lane && pos[1] === position)) {
+                        occ_pos1.push([lane, position]);
+                        console.log(`Added to occ_pos1: lane ${lane}, position ${position}`);
+                    }
+    
+                    if (position === 0 && light === 'green') {
+                        switch (lane) {
+                            case 0:
+                                moveCarLeft11(car);
+                                break;
+                            case 1:
+                                moveCarLeft21(car);
+                                break;
+                            default:
+                                moveCarStraight1(car);
+                                break;
+                        }
+                        occ_pos1 = occ_pos1.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    } else if (lane === 5 && position === 1) {
+                        moveCarRight1(car);
+                        occ_pos1 = occ_pos1.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    } else if (car.position.z <= 140 && car.position.x === 75) {
+                        moveCarRight1(car);
+                        occ_pos1 = occ_pos1.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    } else if ((position !== 0 || light === 'green') && !occ_pos1.some(pos => pos[0] === lane && pos[1] === position - 1)) {
+                        if (position === 7 && lane === 2) {
+                            changeLane1(car, 'left');
+                            occ_pos1.push([lane - 1, position - 1]);
+                        } else if (position === 5 && lane === 1 && !occ_pos1.some(pos => pos[0] === lane - 1 && pos[1] === position - 1)) {
+                            changeLane1(car, 'left');
+                            occ_pos1.push([lane - 1, position - 1]);
+                        } else if (position === 8 && lane === 4) {
+                            changeLane1(car, 'right');
+                            occ_pos1.push([lane + 1, position - 1]);
+                        } else {
+                            moveCarFront1(car);
+                            occ_pos1.push([lane, position - 1]);
+                        }
+                        occ_pos1 = occ_pos1.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    } else {
+                        occ21[lane][position] = 1;
+                    }
+                }
+    
+                console.log(`Final occ_pos1:`, occ_pos1);
+                
+                if (car.position.z < -450) {
+                    scene.remove(car);
+                }
+            });
+        });
+    }, 250);
+    setInterval(() => {
+        const carModels = [
+            [cars['Focus'][6]],
+            [cars['Boxster'][6]],
+            [cars['Focus'][2]],
+            [cars['Boxster'][2]],
+            [cars['Focus'][10]],
+            [cars['Boxster'][10]],
+            [cars['Porsche'][2]],
+            [cars['Porsche'][6]],
+            [cars['Porsche'][10]],
+            [cars['Mustang'][2]],
+            [cars['Mustang'][6]],
+            [cars['Mustang'][10]],
+        ];
+        carModels.forEach(carArray => {
+            carArray.forEach(car => {
+                const lane = Math.floor(car.position.z / 15);
+                const position = Math.floor((-car.position.x - 90) / 30);
+                let light = 'red';
+    
+                if (lane >= 0 && lane <= 4) {
+                    light = getTrafficLightColor(5+lane);
+                }
+                if (position >= 0) {
+                    // Insert debugging logs
+                    console.log(`Processing car at lane: ${lane}, position: ${position}`);
+    
+                    if (!occ_pos2.some(pos => pos[0] === lane && pos[1] === position)) {
+                        occ_pos2.push([lane, position]);
+                        console.log(`Added to occ_pos2: lane ${lane}, position ${position}`);
+                    }
+    
+                    if (position === 0 && light === 'green') {
+                        switch (lane) {
+                            case 0:
+                                moveCarLeft12(car);
+                                break;
+                            case 1:
+                                moveCarLeft22(car);
+                                break;
+                            default:
+                                moveCarStraight2(car);
+                                break;
+                        }
+                        occ_pos2 = occ_pos2.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    } else if (lane === 5 && position === 1) {
+                        moveCarRight2(car);
+                        occ_pos2 = occ_pos2.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    } else if (car.position.x >= -140 && car.position.z === 75) {
+                        moveCarRight2(car);
+                        occ_pos2 = occ_pos2.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    } else if ((position !== 0 || light === 'green') && !occ_pos2.some(pos => pos[0] === lane && pos[1] === position - 1)) {
+                        if (position === 7 && lane === 2) {
+                            changeLane2(car, 'left');
+                            occ_pos2.push([lane - 1, position - 1]);
+                        } else if (position === 5 && lane === 1 && !occ_pos2.some(pos => pos[0] === lane - 1 && pos[1] === position - 1)) {
+                            changeLane2(car, 'left');
+                            occ_pos2.push([lane - 1, position - 1]);
+                        } else if (position === 8 && lane === 4) {
+                            changeLane2(car, 'right');
+                            occ_pos2.push([lane + 1, position - 1]);
+                        } else {
+                            moveCarFront2(car);
+                            occ_pos2.push([lane, position - 1]);
+                        }
+                        occ_pos2 = occ_pos2.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    } else {
+                        occ21[lane][position] = 1;
+                    }
+                }
+    
+                console.log(`Final occ_pos2:`, occ_pos2);
+                
+                if (car.position.z < -450) {
+                    scene.remove(car);
+                }
+            });
+        });
+    }, 250);
+    setInterval(() => {
+        const carModels = [
+            [cars['Focus'][7]],
+            [cars['Boxster'][7]],
+            [cars['Focus'][3]],
+            [cars['Boxster'][3]],
+            [cars['Focus'][11]],
+            [cars['Boxster'][11]],
+            [cars['Porsche'][3]],
+            [cars['Porsche'][7]],
+            [cars['Porsche'][11]],
+            [cars['Mustang'][3]],
+            [cars['Mustang'][7]],
+            [cars['Mustang'][11]],
+        ];
+        carModels.forEach(carArray => {
+            carArray.forEach(car => {
+                const lane = Math.floor(-car.position.z / 15);
+                const position = Math.floor((car.position.x - 90) / 30);
+                let light = 'red';
+    
+                if (lane >= 0 && lane <= 4) {
+                    light = getTrafficLightColor(10+lane);
+                }
+                if (position >= 0) {
+                    // Insert debugging logs
+                    console.log(`Processing car at lane: ${lane}, position: ${position}`);
+    
+                    if (!occ_pos3.some(pos => pos[0] === lane && pos[1] === position)) {
+                        occ_pos3.push([lane, position]);
+                        console.log(`Added to occ_pos3: lane ${lane}, position ${position}`);
+                    }
+    
+                    if (position === 0 && light === 'green') {
+                        switch (lane) {
+                            case 0:
+                                moveCarLeft13(car);
+                                break;
+                            case 1:
+                                moveCarLeft23(car);
+                                break;
+                            default:
+                                moveCarStraight3(car);
+                                break;
+                        }
+                        occ_pos3 = occ_pos3.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    } else if (lane === 5 && position === 1) {
+                        moveCarRight3(car);
+                        occ_pos3 = occ_pos3.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    } else if (car.position.x <= 140 && car.position.z === -75) {
+                        moveCarRight3(car);
+                        occ_pos3 = occ_pos3.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    } else if ((position !== 0 || light === 'green') && !occ_pos3.some(pos => pos[0] === lane && pos[1] === position - 1)) {
+                        if (position === 7 && lane === 2) {
+                            changeLane3(car, 'left');
+                            occ_pos3.push([lane - 1, position - 1]);
+                        } else if (position === 5 && lane === 1 && !occ_pos3.some(pos => pos[0] === lane - 1 && pos[1] === position - 1)) {
+                            changeLane3(car, 'left');
+                            occ_pos3.push([lane - 1, position - 1]);
+                        } else if (position === 8 && lane === 4) {
+                            changeLane3(car, 'right');
+                            occ_pos3.push([lane + 1, position - 1]);
+                        } else {
+                            moveCarFront3(car);
+                            occ_pos3.push([lane, position - 1]);
+                        }
+                        occ_pos3 = occ_pos3.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    } else {
+                        occ21[lane][position] = 1;
+                    }
+                }
+    
+                console.log(`Final occ_pos3:`, occ_pos3);
+                
+                if (car.position.z < -450) {
+                    scene.remove(car);
+                }
+            });
+        });
+    }, 250);
+
+}).catch(error => {
+    console.error(error);
+});
+
+
+loadRoad(scene);
+setupJoystick(scene, camera);
+
+
+function moveCarRight(carModel) {
+    let yPosition=carModel.position.y;
+
+        // Create a GSAP timeline for seamless transitions
+        const timeline = gsap.timeline();
+
+        // Add each movement to the timeline
+        timeline.add(() => {
+                    // Step 2: Animate the right turn with radius 60
+                    animateTurn(carModel, () => {
+                        // Step 3: Continue straight along the x-axis from (135, y, -60)
+                        gsap.to(carModel.position, {
+                            duration: 3,
+                            x: 450,
+                            y: yPosition,
+                            z: 60,
+                            onComplete: () => {
+                                console.log('Car reached destination');
+                            }
+                        });
+                    });
+                });
+
+}
+
+function moveCarRight1(carModel) {
+    let yPosition=carModel.position.y;
+
+        // Create a GSAP timeline for seamless transitions
+        const timeline = gsap.timeline();
+
+        // Add each movement to the timeline
+        timeline.add(() => {
+                    // Step 2: Animate the right turn with radius 60
+                    animateTurn1(carModel, () => {
+                        // Step 3: Continue straight along the x-axis from (135, y, -60)
+                        gsap.to(carModel.position, {
+                            duration: 3,
+                            x: -450,
+                            y: yPosition,
+                            z: -60,
+                            onComplete: () => {
+                                console.log('Car reached destination');
+                            }
+                        });
+                    });
+                });
+
+}
+function moveCarRight2(carModel) {
+    let yPosition=carModel.position.y;
+
+        // Create a GSAP timeline for seamless transitions
+        const timeline = gsap.timeline();
+
+        // Add each movement to the timeline
+        timeline.add(() => {
+                    // Step 2: Animate the right turn with radius 60
+                    animateTurn2(carModel, () => {
+                        // Step 3: Continue straight along the x-axis from (135, y, -60)
+                        gsap.to(carModel.position, {
+                            duration: 3,
+                            x: -60,
+                            y: yPosition,
+                            z: 450,
+                            onComplete: () => {
+                                console.log('Car reached destination');
+                            }
+                        });
+                    });
+                });
+
+}
+function moveCarRight3(carModel) {
+    let yPosition=carModel.position.y;
+
+        // Create a GSAP timeline for seamless transitions
+        const timeline = gsap.timeline();
+
+        // Add each movement to the timeline
+        timeline.add(() => {
+                    // Step 2: Animate the right turn with radius 60
+                    animateTurn3(carModel, () => {
+                        // Step 3: Continue straight along the x-axis from (135, y, -60)
+                        gsap.to(carModel.position, {
+                            duration: 3,
+                            x: 60,
+                            y: yPosition,
+                            z: -450,
+                            onComplete: () => {
+                                console.log('Car reached destination');
+                            }
+                        });
+                    });
+                });
+
+}
+
+
+function animateTurn(carModel, onComplete) {
+    const radius = 60;
+    const centerX = 75 + radius;  // Center of the turn circle at (135, y, 120)
+    const centerZ = 120;  // Z-position of the circle's center
+    const startAngle = 3*Math.PI/2;  
+    const endAngle = Math.PI;  
+
+    gsap.to(carModel.position, {
+        duration: 1,
+        onUpdate: function () {
+            const angle = startAngle + (endAngle - startAngle) * (1 - this.progress());
+            carModel.position.x = centerX + radius * Math.cos(angle);
+            carModel.position.z = centerZ + radius * Math.sin(angle);
+            carModel.rotation.y = -angle;
+        },
+        onComplete: onComplete
+    });
+}
+
+function animateTurn1(carModel, onComplete) {
+    const radius = 60;
+    const centerX = -75 - radius;  // Center of the turn circle at (135, y, 120)
+    const centerZ = -120;  // Z-position of the circle's center
+    const startAngle = 3*Math.PI/2+Math.PI;  
+    const endAngle = Math.PI+Math.PI;  
+
+    gsap.to(carModel.position, {
+        duration: 1,
+        onUpdate: function () {
+            const angle = startAngle + (endAngle - startAngle) * (1 - this.progress());
+            carModel.position.x = centerX + radius * Math.cos(angle);
+            carModel.position.z = centerZ + radius * Math.sin(angle);
+            carModel.rotation.y = -angle;
+        },
+        onComplete: onComplete
+    });
+}
+function animateTurn2(carModel, onComplete) {
+    const radius = 60;
+    const centerZ = 75 + radius;  // Center of the turn circle at (135, y, 120)
+    const centerX = -120;  // Z-position of the circle's center
+    const startAngle = 0;  // Start at 270 degrees
+    const endAngle = -Math.PI/2;  // End at 180 degrees
+
+    gsap.to(carModel.position, {
+        duration: 1,
+        onUpdate: function () {
+            const angle = startAngle + (endAngle - startAngle) * (1 - this.progress());
+            carModel.position.x = centerX + radius * Math.cos(angle);
+            carModel.position.z = centerZ + radius * Math.sin(angle);
+            carModel.rotation.y = -angle;
+        },
+        onComplete: onComplete
+    });
+}
+function animateTurn3(carModel, onComplete) {
+    const radius = 60;
+    const centerZ = -75 - radius;  // Center of the turn circle at (135, y, 120)
+    const centerX = 120;  // Z-position of the circle's center
+    const startAngle = Math.PI;  // Start at 270 degrees
+    const endAngle = Math.PI/2;  // End at 180 degrees
+
+    gsap.to(carModel.position, {
+        duration: 1,
+        onUpdate: function () {
+            const angle = startAngle + (endAngle - startAngle) * (1 - this.progress());
+            carModel.position.x = centerX + radius * Math.cos(angle);
+            carModel.position.z = centerZ + radius * Math.sin(angle);
+            carModel.rotation.y = -angle;
+        },
+        onComplete: onComplete
+    });
+}
+
+function animateTurnL1(carModel, onComplete) {
+    const radius = 90;
+    const centerX = 0 - radius;  // Center of the turn circle at (135, y, 120)
+    const centerZ = 60;  // Z-position of the circle's center
+    const startAngle = 3*Math.PI/2;  // 180 degrees (pointing left)
+    const endAngle = 2*Math.PI;  // -90 degrees (pointing down)
+
+    gsap.to(carModel.position, {
+        duration: 1,
+        onUpdate: function () {
+            const angle = startAngle + (endAngle - startAngle) * (1 - this.progress());
+            carModel.position.x = centerX + radius * Math.cos(angle);
+            carModel.position.z = centerZ + radius * Math.sin(angle);
+            carModel.rotation.y = -angle+Math.PI;
+        },
+        onComplete: onComplete
+    });
+}
+function animateTurnL11(carModel, onComplete) {
+    const radius = 90;
+    const centerX = 0 + radius;  // Center of the turn circle at (135, y, 120)
+    const centerZ = -60;  // Z-position of the circle's center
+    const startAngle = 3*Math.PI/2+Math.PI;  // 180 degrees (pointing left)
+    const endAngle = 2*Math.PI+Math.PI;  // -90 degrees (pointing down)
+
+    gsap.to(carModel.position, {
+        duration: 1,
+        onUpdate: function () {
+            const angle = startAngle + (endAngle - startAngle) * (1 - this.progress());
+            carModel.position.x = centerX + radius * Math.cos(angle);
+            carModel.position.z = centerZ + radius * Math.sin(angle);
+            carModel.rotation.y = -angle+Math.PI;
+        },
+        onComplete: onComplete
+    });
+}
+function animateTurnL12(carModel, onComplete) {
+    const radius = 90;
+    const centerZ = 0 - radius;  // Center of the turn circle at (135, y, 120)
+    const centerX = -60;  // Z-position of the circle's center
+    const startAngle = 0;  // 180 degrees (pointing left)
+    const endAngle = Math.PI/2;  // -90 degrees (pointing down)
+
+    gsap.to(carModel.position, {
+        duration: 1,
+        onUpdate: function () {
+            const angle = startAngle + (endAngle - startAngle) * (1 - this.progress());
+            carModel.position.x = centerX + radius * Math.cos(angle);
+            carModel.position.z = centerZ + radius * Math.sin(angle);
+            carModel.rotation.y = -angle+Math.PI;
+        },
+        onComplete: onComplete
+    });
+}
+function animateTurnL13(carModel, onComplete) {
+    const radius = 90;
+    const centerZ = 0 + radius;  // Center of the turn circle at (135, y, 120)
+    const centerX = 60;  // Z-position of the circle's center
+    const startAngle = Math.PI;  // 180 degrees (pointing left)
+    const endAngle = Math.PI/2+Math.PI;  // -90 degrees (pointing down)
+
+    gsap.to(carModel.position, {
+        duration: 1,
+        onUpdate: function () {
+            const angle = startAngle + (endAngle - startAngle) * (1 - this.progress());
+            carModel.position.x = centerX + radius * Math.cos(angle);
+            carModel.position.z = centerZ + radius * Math.sin(angle);
+            carModel.rotation.y = -angle+Math.PI;
+        },
+        onComplete: onComplete
+    });
+}
+
+function moveCarLeft1(carModel) {
+// / Get the second clone
+        let yPosition=carModel.position.y;
+        // Create a GSAP timeline for seamless transitions
+        const timeline = gsap.timeline();
+
+        // Add each movement to the timeline
+        timeline.to(carModel.position, { duration: 0.25, x: 0, y: yPosition, z: 60 })
+                .add(() => {
+                    // Step 2: Animate the right turn with radius 60
+                    animateTurnL1(carModel, () => {
+                        // Step 3: Continue straight along the x-axis from (135, y, -60)
+                        gsap.to(carModel.position, {
+                            duration: 5,
+                            x: -450,
+                            y: yPosition,
+                            z: -30,
+                            onComplete: () => {
+                                console.log('Car reached destination');
+                            }
+                        });
+                    });
+                });
+}
+function moveCarLeft11(carModel) {
+    // / Get the second clone
+            let yPosition=carModel.position.y;
+            // Create a GSAP timeline for seamless transitions
+            const timeline = gsap.timeline();
+    
+            // Add each movement to the timeline
+            timeline.to(carModel.position, { duration: 0.25, x: 0, y: yPosition, z: -60 })
+                    .add(() => {
+                        // Step 2: Animate the right turn with radius 60
+                        animateTurnL11(carModel, () => {
+                            // Step 3: Continue straight along the x-axis from (135, y, -60)
+                            gsap.to(carModel.position, {
+                                duration: 5,
+                                x: 450,
+                                y: yPosition,
+                                z: 30,
+                                onComplete: () => {
+                                    console.log('Car reached destination');
+                                }
+                            });
+                        });
+                    });
+    }
+function moveCarLeft12(carModel) {
+        // / Get the second clone
+                let yPosition=carModel.position.y;
+                // Create a GSAP timeline for seamless transitions
+                const timeline = gsap.timeline();
+        
+                // Add each movement to the timeline
+                timeline.to(carModel.position, { duration: 0.25, x: -60, y: yPosition, z: 0 })
+                        .add(() => {
+                            // Step 2: Animate the right turn with radius 60
+                            animateTurnL12(carModel, () => {
+                                // Step 3: Continue straight along the x-axis from (135, y, -60)
+                                gsap.to(carModel.position, {
+                                    duration: 5,
+                                    x: 30,
+                                    y: yPosition,
+                                    z: -450,
+                                    onComplete: () => {
+                                        console.log('Car reached destination');
+                                    }
+                                });
+                            });
+                        });
+        }
+function moveCarLeft13(carModel) {
+            // / Get the second clone
+                    let yPosition=carModel.position.y;
+                    // Create a GSAP timeline for seamless transitions
+                    const timeline = gsap.timeline();
+            
+                    // Add each movement to the timeline
+                    timeline.to(carModel.position, { duration: 0.25, x: 60, y: yPosition, z: 0 })
+                            .add(() => {
+                                // Step 2: Animate the right turn with radius 60
+                                animateTurnL13(carModel, () => {
+                                    // Step 3: Continue straight along the x-axis from (135, y, -60)
+                                    gsap.to(carModel.position, {
+                                        duration: 5,
+                                        x: -30,
+                                        y: yPosition,
+                                        z: 450,
+                                        onComplete: () => {
+                                            console.log('Car reached destination');
+                                        }
+                                    });
+                                });
+                            });
+            }
+
+function animateTurnL2(carModel, onComplete) {
+    const radius = 90+15;
+    const centerX = 15 - radius;  // Center of the turn circle at (135, y, 120)
+    const centerZ = 60;  // Z-position of the circle's center
+    const startAngle = 3*Math.PI/2;  // 180 degrees (pointing left)
+    const endAngle = 2*Math.PI;  // -90 degrees (pointing down)
+
+    gsap.to(carModel.position, {
+        duration: 1,
+        onUpdate: function () {
+            const angle = startAngle + (endAngle - startAngle) * (1 - this.progress());
+            carModel.position.x = centerX + radius * Math.cos(angle);
+            carModel.position.z = centerZ + radius * Math.sin(angle);
+            carModel.rotation.y = -angle+Math.PI;
+        },
+        onComplete: onComplete
+    });
+}
+function animateTurnL21(carModel, onComplete) {
+    const radius = 90+15;
+    const centerX = -15 + radius;  // Center of the turn circle at (135, y, 120)
+    const centerZ = -60;  // Z-position of the circle's center
+    const startAngle = 3*Math.PI/2+Math.PI;  // 180 degrees (pointing left)
+    const endAngle = 2*Math.PI+Math.PI;  // -90 degrees (pointing down)
+
+    gsap.to(carModel.position, {
+        duration: 1,
+        onUpdate: function () {
+            const angle = startAngle + (endAngle - startAngle) * (1 - this.progress());
+            carModel.position.x = centerX + radius * Math.cos(angle);
+            carModel.position.z = centerZ + radius * Math.sin(angle);
+            carModel.rotation.y = -angle+Math.PI;
+        },
+        onComplete: onComplete
+    });
+}
+function animateTurnL22(carModel, onComplete) {
+    const radius = 90+15;
+    const centerZ = -(radius-15);  // Center of the turn circle at (135, y, 120)
+    const centerX = -60;  // Z-position of the circle's center
+    const startAngle = 0;  // 180 degrees (pointing left)
+    const endAngle = Math.PI/2;  // -90 degrees (pointing down)
+
+    gsap.to(carModel.position, {
+        duration: 1,
+        onUpdate: function () {
+            const angle = startAngle + (endAngle - startAngle) * (1 - this.progress());
+            carModel.position.x = centerX + radius * Math.cos(angle);
+            carModel.position.z = centerZ + radius * Math.sin(angle);
+            carModel.rotation.y = -angle+Math.PI;
+        },
+        onComplete: onComplete
+    });
+}
+function animateTurnL23(carModel, onComplete) {
+    const radius = 90+15;
+    const centerZ = -15 + radius;  // Center of the turn circle at (135, y, 120)
+    const centerX = 60;  // Z-position of the circle's center
+    const startAngle = Math.PI;  // 180 degrees (pointing left)
+    const endAngle = Math.PI/2+Math.PI;  // -90 degrees (pointing down)
+
+    gsap.to(carModel.position, {
+        duration: 1,
+        onUpdate: function () {
+            const angle = startAngle + (endAngle - startAngle) * (1 - this.progress());
+            carModel.position.x = centerX + radius * Math.cos(angle);
+            carModel.position.z = centerZ + radius * Math.sin(angle);
+            carModel.rotation.y = -angle+Math.PI;
+        },
+        onComplete: onComplete
+    });
+}
+
+
+function moveCarLeft2(carModel) {
+    let yPosition=carModel.position.y;
+
+        // Create a GSAP timeline for seamless transitions
+        const timeline = gsap.timeline();
+
+        // Add each movement to the timeline
+        timeline.to(carModel.position, { duration: 0.25, x: 15, y: yPosition, z: 60 })
+                .add(() => {
+                    // Step 2: Animate the right turn with radius 60
+                    animateTurnL2(carModel, () => {
+                        // Step 3: Continue straight along the x-axis from (135, y, -60)
+                        gsap.to(carModel.position, {
+                            duration: 5,
+                            x: -450,
+                            y: yPosition,
+                            z: -45,
+                            onComplete: () => {
+                                console.log('Car reached destination');
+                            }
+                        });
+                    });
+                });
+}
+
+function moveCarLeft21(carModel) {
+    let yPosition=carModel.position.y;
+
+        // Create a GSAP timeline for seamless transitions
+        const timeline = gsap.timeline();
+
+        // Add each movement to the timeline
+        timeline.to(carModel.position, { duration: 0.25, x: -15, y: yPosition, z: -60 })
+                .add(() => {
+                    // Step 2: Animate the right turn with radius 60
+                    animateTurnL21(carModel, () => {
+                        // Step 3: Continue straight along the x-axis from (135, y, -60)
+                        gsap.to(carModel.position, {
+                            duration: 5,
+                            x: 450,
+                            y: yPosition,
+                            z: 45,
+                            onComplete: () => {
+                                console.log('Car reached destination');
+                            }
+                        });
+                    });
+                });
+}
+function moveCarLeft22(carModel) {
+    let yPosition=carModel.position.y;
+
+        const timeline = gsap.timeline();
+
+        timeline.to(carModel.position, { duration: 0.25, x: -60, y: yPosition, z: 15 })
+                .add(() => {
+                    animateTurnL22(carModel, () => {
+                        gsap.to(carModel.position, {
+                            duration: 5,
+                            x: 45,
+                            y: yPosition,
+                            z: -450,
+                            onComplete: () => {
+                                console.log('Car reached destination');
+                            }
+                        });
+                    });
+                });
+}
+function moveCarLeft23(carModel) {
+    let yPosition=carModel.position.y;
+
+        const timeline = gsap.timeline();
+
+        timeline.to(carModel.position, { duration: 0.25, x: 60, y: yPosition, z: -15 })
+                .add(() => {
+                    animateTurnL23(carModel, () => {
+                        gsap.to(carModel.position, {
+                            duration: 5,
+                            x: -45,
+                            y: yPosition,
+                            z: 450,
+                            onComplete: () => {
+                                console.log('Car reached destination');
+                            }
+                        });
+                    });
+                });
+}
+
+function moveCarStraight(carModel) {
+    let yPosition=carModel.position.y;
+    gsap.to(carModel.position, {
+        duration: 5,
+        x: carModel.position.x,
+        y: yPosition,
+        z: -450,
+        onComplete: () => {
+            console.log('Car reached destination');
+        }
+    });
+}
+
+function moveCarStraight1(carModel) {
+    let yPosition=carModel.position.y;
+    gsap.to(carModel.position, {
+        duration: 5,
+        x: carModel.position.x,
+        y: yPosition,
+        z: 450,
+        onComplete: () => {
+            console.log('Car reached destination');
+        }
+    });
+}
+function moveCarStraight2(carModel) {
+    let yPosition=carModel.position.y;
+    gsap.to(carModel.position, {
+        duration: 5,
+        x: 450,
+        y: yPosition,
+        z: carModel.position.z,
+        onComplete: () => {
+            console.log('Car reached destination');
+        }
+    });
+}
+function moveCarStraight3(carModel) {
+    let yPosition=carModel.position.y;
+    gsap.to(carModel.position, {
+        duration: 5,
+        x: -450,
+        y: yPosition,
+        z: carModel.position.z,
+        onComplete: () => {
+            console.log('Car reached destination');
+        }
+    });
+}
+
+function changeLane(car,dir){
+    let currentZ=car.position.z;
+    let currentX=car.position.x;
+    const timeline = gsap.timeline();
+    currentZ -= 30;
+    if(dir=='left'){currentX -= 15;}else if(dir=='right'){currentX += 15;}
+
+    timeline.to(car.position, {
+        duration: 0.25,
+        x: currentX,
+        y: car.position.y,
+        z: currentZ
+    });
+}
+
+function changeLane1(car,dir){
+    let currentZ=car.position.z;
+    let currentX=car.position.x;
+    const timeline = gsap.timeline();
+    currentZ += 30;
+    if(dir=='left'){currentX += 15;}else if(dir=='right'){currentX -= 15;}
+
+    timeline.to(car.position, {
+        duration: 0.25,
+        x: currentX,
+        y: car.position.y,
+        z: currentZ
+    });
+}
+function changeLane2(car,dir){
+    let currentZ=car.position.z;
+    let currentX=car.position.x;
+    const timeline = gsap.timeline();
+    currentX += 30;
+    if(dir=='left'){currentZ -= 15;}else if(dir=='right'){currentZ += 15;}
+
+    timeline.to(car.position, {
+        duration: 0.25,
+        x: currentX,
+        y: car.position.y,
+        z: currentZ
+    });
+}
+function changeLane3(car,dir){
+    let currentZ=car.position.z;
+    let currentX=car.position.x;
+    const timeline = gsap.timeline();
+    currentX -= 30;
+    if(dir=='left'){currentZ += 15;}else if(dir=='right'){currentZ -= 15;}
+
+    timeline.to(car.position, {
+        duration: 0.25,
+        x: currentX,
+        y: car.position.y,
+        z: currentZ
+    });
+}
+
+function moveCarFront(car) {
+    let currentZ=car.position.z;
+    const timeline = gsap.timeline();
+    
+    // Move car forward by 30 units on the z-axis
+    currentZ -= 30;
+    
+    timeline.to(car.position, { 
+        duration: 0.25, // Update the duration to match the interval
+        x: car.position.x,          // Keep x constant
+        y: car.position.y,          // Keep y constant
+        z: currentZ     // Use updated z position
+    });
+}
+
+function moveCarFront1(car) {
+    let currentZ=car.position.z;
+    const timeline = gsap.timeline();
+    
+    // Move car forward by 30 units on the z-axis
+    currentZ += 30;
+    
+    timeline.to(car.position, { 
+        duration: 0.25, // Update the duration to match the interval
+        x: car.position.x,          // Keep x constant
+        y: car.position.y,          // Keep y constant
+        z: currentZ     // Use updated z position
+    });
+}
+function moveCarFront2(car) {
+    let currentX=car.position.x;
+    const timeline = gsap.timeline();
+    
+    currentX += 30;
+    
+    timeline.to(car.position, { 
+        duration: 0.25,
+        x: currentX,       
+        y: car.position.y,      
+        z: car.position.z
+    });
+}
+function moveCarFront3(car) {
+    let currentX=car.position.x;
+    const timeline = gsap.timeline();
+    
+    currentX -= 30;
+    
+    timeline.to(car.position, { 
+        duration: 0.25,
+        x: currentX,       
+        y: car.position.y,      
+        z: car.position.z
+    });
+}
+
+//Define a list containing lists of diffrent sizes
+let occ2 = [  [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0], 
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0]
+            ];
 
 
 
 
+let occ_pos=[];
+
+let occ21 = [  [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0], 
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0]
+            ];
 
 
 
 
+let occ_pos1=[];
+
+let occ22 = [  [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0], 
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0]
+            ];
 
 
 
 
+let occ_pos2=[];
+
+let occ23 = [  [0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0], 
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0]
+            ];
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+let occ_pos3=[];
 
 
 // -------------------------Traffic Light-------------------------
@@ -585,17 +1323,17 @@ function controlTrafficSignals() {
     // Define the two traffic signal patterns
     const patterns = {
         1: [
-            { lights: [st1, l1], duration: 5000 }, // st1 and l1 green for 5 seconds
-            { lights: [st2, l2], duration: 5000 }, // st2 and l2 green for 5 seconds
-            { lights: [st3, l3], duration: 5000 }, // st3 and l3 green for 5 seconds
-            { lights: [st4, l4], duration: 5000 }, // st4 and l4 green for 5 seconds
+            { lights: [st1, l1], duration: 3000 }, // st1 and l1 green for 5 seconds
+            { lights: [st2, l2], duration: 3000 }, // st2 and l2 green for 5 seconds
+            { lights: [st3, l3], duration: 3000 }, // st3 and l3 green for 5 seconds
+            { lights: [st4, l4], duration: 3000 }, // st4 and l4 green for 5 seconds
         ],
         2: [
             
-            { lights: [st1, st2], duration: 5000 }, // First green for 5 seconds
-            { lights: [st3, st4], duration: 5000 }, // Next green for 5 seconds
-            { lights: [l1, l2], duration: 5000 },   // Next green for 5 seconds
-            { lights: [l3, l4], duration: 5000 },   // Next green for 5 seconds
+            { lights: [st1, st2], duration: 3000 }, // First green for 5 seconds
+            { lights: [st3, st4], duration: 3000 }, // Next green for 5 seconds
+            { lights: [l1, l2], duration: 3000 },   // Next green for 5 seconds
+            { lights: [l3, l4], duration: 3000 },   // Next green for 5 seconds
         ],
     };
 
