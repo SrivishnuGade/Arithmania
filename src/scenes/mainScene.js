@@ -306,7 +306,7 @@ setTimeout(() => {
                 if(lane>=0 &&lane<=4){
                     light = getTrafficLightColor(15+lane);
                 }
-                console.log(light);
+                // console.log(light);
                 if(position>=0)
                 {
                     // Check if the car's current position is already tracked
@@ -330,6 +330,7 @@ setTimeout(() => {
                         occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
                     }else if(lane===5 && position===1){
                         moveCarRight(car);
+                        console.log('right');
                         occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
                     }
                     else
@@ -362,8 +363,8 @@ setTimeout(() => {
                     }
                 }
                 // Log for debugging
-                console.log(`Position: ${position}, Lane: ${lane}`);
-                console.log(occ_pos);
+                // console.log(`Position: ${position}, Lane: ${lane}`);
+                // console.log(occ_pos);
 
                 // Remove the car from the scene if it goes beyond z = -450
                 if (car.position.z < -450) {
