@@ -83,6 +83,19 @@ Promise.all([
     // loadModel(scene,'Civic', '/assets/civic/scene.gltf', 500, 0, 75, 12)
 ]).then(() => {
     console.log('All models loaded:', cars);
+    scene.remove(cars['Mustang'][1]);
+    scene.remove(cars['Mustang'][5]);
+    scene.remove(cars['Mustang'][9]);
+    scene.remove(cars['Focus'][8]);
+    scene.remove(cars['Mustang'][0]);
+    scene.remove(cars['Mustang'][4]);
+    scene.remove(cars['Mustang'][8]);
+    scene.remove(cars['Mustang'][2]);
+    scene.remove(cars['Mustang'][6]);
+    scene.remove(cars['Mustang'][10]);
+    scene.remove(cars['Focus'][11]);
+
+
     setInterval(() => {
         // Define the cars you want to include in the loop
         const carModels = [
@@ -174,7 +187,7 @@ Promise.all([
                 // console.log(occ_pos);
 
                 // Remove the car from the scene if it goes beyond z = -450
-                if (car.position.z < -450) {
+                if (car.position.z < -400 || car.position.x > 400 || car.position.x < -400) {
                     scene.remove(car);
                 }
             });
@@ -182,11 +195,11 @@ Promise.all([
     }, 250);
     setInterval(() => {
         const carModels = [
-            // [cars['Focus'][4]],
+            [cars['Focus'][4]],
             [cars['Boxster'][4]],
             [cars['Focus'][0]],
             [cars['Boxster'][0]],
-            [cars['Focus'][8]],
+            // [cars['Focus'][8]],
             [cars['Boxster'][8]],
             [cars['Porsche'][0]],
             [cars['Porsche'][4]],
@@ -254,7 +267,7 @@ Promise.all([
     
                 console.log(`Final occ_pos1:`, occ_pos1);
                 
-                if (car.position.z < -450) {
+                if (car.position.z > 410|| car.position.x > 410 || car.position.x < -410) {
                     scene.remove(car);
                 }
             });
@@ -334,7 +347,7 @@ Promise.all([
     
                 console.log(`Final occ_pos2:`, occ_pos2);
                 
-                if (car.position.z < -450) {
+                if (car.position.x > 400 || car.position.z > 400 || car.position.z < -400) {
                     scene.remove(car);
                 }
             });
@@ -344,9 +357,9 @@ Promise.all([
         const carModels = [
             [cars['Focus'][7]],
             [cars['Boxster'][7]],
-            // [cars['Focus'][3]],
+            [cars['Focus'][3]],
             [cars['Boxster'][3]],
-            [cars['Focus'][11]],
+            // [cars['Focus'][11]],
             [cars['Boxster'][11]],
             [cars['Porsche'][3]],
             [cars['Porsche'][7]],
@@ -414,7 +427,7 @@ Promise.all([
     
                 console.log(`Final occ_pos3:`, occ_pos3);
                 
-                if (car.position.z < -450) {
+                if (car.position.x < -400 || car.position.z > 400 || car.position.z < -400) {
                     scene.remove(car);
                 }
             });
@@ -638,6 +651,18 @@ function controlTrafficSignals() {
             { lights: [l1, l2], duration: 3000 },   // Next green for 5 seconds
             { lights: [l3, l4], duration: 3000 },   // Next green for 5 seconds
         ],
+        3:[
+            { lights: [st1, l1], duration: 3000 }, // st1 and l1 green for 5 seconds
+            { lights: [st2, l2], duration: 3000 }, // st2 and l2 green for 5 seconds
+            { lights: [st3, st4], duration: 3000 }, // st3 and l3 green for 5 seconds
+            { lights: [l3, l4], duration: 3000 }, // st4 and l4 green for 5 seconds
+        ],
+        4:[
+            { lights: [st1, st2], duration: 3000 }, // st1 and l1 green for 5 seconds
+            { lights: [l1, l2], duration: 3000 }, // st2 and l2 green for 5 seconds
+            { lights: [st3, l3], duration: 3000 }, // st3 and l3 green for 5 seconds
+            { lights: [st4, l4], duration: 3000 }, // st4 and l4 green for 5 seconds
+        ]
     };
 
     let index = 0;
@@ -682,6 +707,13 @@ function switchPattern(event) {
     } else if (event.key === '2') {
         currentPattern = 2; // Switch to pattern 2
         console.log("Switched to Pattern 2");
+    } else if (event.key === '3') {
+        currentPattern = 3; // Switch to pattern 3
+        console.log("Switched to Pattern 3");
+    }
+    else if (event.key === '4') {
+        currentPattern = 4; // Switch to pattern 3
+        console.log("Switched to Pattern 4");
     }
 }
 
