@@ -95,9 +95,9 @@ Promise.all([
             [cars['Porsche'][1]],
             [cars['Porsche'][5]],
             [cars['Porsche'][9]],
-            [cars['Mustang'][1]],
-            [cars['Mustang'][5]],
-            [cars['Mustang'][9]],
+            // [cars['Mustang'][1]],
+            // [cars['Mustang'][5]],
+            // [cars['Mustang'][9]],
         ];
 
         // Loop over each car array and each car within those arrays
@@ -116,7 +116,16 @@ Promise.all([
                     if (!occ_pos.some(pos => pos[0] === lane && pos[1] === position)) {
                         occ_pos.push([lane, position]); // Only add if it doesn't exist
                     }
-                    if (position === 0 && light=='green') {
+                    if(lane===5 && position===1){
+                        moveCarRight(car);
+                        console.log('right');
+                        occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    }
+                    else if (car.position.z <= 140 && car.position.x===75) {
+                        moveCarRight(car);
+                        occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    }
+                    else if (position === 0 && light=='green') {
                         switch (lane) {
                             case 0:
                                 moveCarLeft1(car);
@@ -131,15 +140,8 @@ Promise.all([
                                 break;
                         }
                         occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
-                    }else if(lane===5 && position===1){
-                        moveCarRight(car);
-                        console.log('right');
-                        occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
                     }
-                    else if (car.position.z <= 140 && car.position.x===75) {
-                        moveCarRight(car);
-                        occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
-                    }
+                    
                     else if ((position !== 0 || light=='green') && !occ_pos.some(pos => pos[0] === lane && pos[1] === position - 1)) {
                         // Move the car forward
      
@@ -180,7 +182,7 @@ Promise.all([
     }, 250);
     setInterval(() => {
         const carModels = [
-            [cars['Focus'][4]],
+            // [cars['Focus'][4]],
             [cars['Boxster'][4]],
             [cars['Focus'][0]],
             [cars['Boxster'][0]],
@@ -189,9 +191,9 @@ Promise.all([
             [cars['Porsche'][0]],
             [cars['Porsche'][4]],
             [cars['Porsche'][8]],
-            [cars['Mustang'][0]],
-            [cars['Mustang'][4]],
-            [cars['Mustang'][8]],
+            // [cars['Mustang'][0]],
+            // [cars['Mustang'][4]],
+            // [cars['Mustang'][8]],
         ];
         carModels.forEach(carArray => {
             carArray.forEach(car => {
@@ -269,9 +271,9 @@ Promise.all([
             [cars['Porsche'][2]],
             [cars['Porsche'][6]],
             [cars['Porsche'][10]],
-            [cars['Mustang'][2]],
-            [cars['Mustang'][6]],
-            [cars['Mustang'][10]],
+            // [cars['Mustang'][2]],
+            // [cars['Mustang'][6]],
+            // [cars['Mustang'][10]],
         ];
         carModels.forEach(carArray => {
             carArray.forEach(car => {
@@ -342,7 +344,7 @@ Promise.all([
         const carModels = [
             [cars['Focus'][7]],
             [cars['Boxster'][7]],
-            [cars['Focus'][3]],
+            // [cars['Focus'][3]],
             [cars['Boxster'][3]],
             [cars['Focus'][11]],
             [cars['Boxster'][11]],
