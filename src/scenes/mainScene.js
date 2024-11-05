@@ -83,16 +83,16 @@ Promise.all([
     // loadModel(scene,'Civic', '/assets/civic/scene.gltf', 500, 0, 75, 12)
 ]).then(() => {
     console.log('All models loaded:', cars);
-    scene.remove(cars['Mustang'][1]);
-    scene.remove(cars['Mustang'][5]);
-    scene.remove(cars['Mustang'][9]);
+    // scene.remove(cars['Mustang'][1]);
+    // scene.remove(cars['Mustang'][5]);
+    // scene.remove(cars['Mustang'][9]);
     scene.remove(cars['Focus'][8]);
-    scene.remove(cars['Mustang'][0]);
-    scene.remove(cars['Mustang'][4]);
-    scene.remove(cars['Mustang'][8]);
-    scene.remove(cars['Mustang'][2]);
-    scene.remove(cars['Mustang'][6]);
-    scene.remove(cars['Mustang'][10]);
+    // scene.remove(cars['Mustang'][0]);
+    // scene.remove(cars['Mustang'][4]);
+    // scene.remove(cars['Mustang'][8]);
+    // scene.remove(cars['Mustang'][2]);
+    // scene.remove(cars['Mustang'][6]);
+    // scene.remove(cars['Mustang'][10]);
     scene.remove(cars['Focus'][11]);
 
 
@@ -108,37 +108,58 @@ Promise.all([
             [cars['Porsche'][1]],
             [cars['Porsche'][5]],
             [cars['Porsche'][9]],
-            // [cars['Mustang'][1]],
-            // [cars['Mustang'][5]],
-            // [cars['Mustang'][9]],
+            [cars['Mustang'][1]],
+            [cars['Mustang'][5]],
+            [cars['Mustang'][9]],
         ];
 
         // Loop over each car array and each car within those arrays
         carModels.forEach(carArray => {
             carArray.forEach(car => {
-                const lane = Math.floor(car.position.x / 15);
+                let lane=5;
+                if(car.position.x<70){
+                    lane = Math.floor(car.position.x / 15);
+                }
                 const position = Math.floor((car.position.z - 90) / 30);
                 let light= 'red';
                 if(lane>=0 &&lane<=4){
                     light = getTrafficLightColor(15+lane);
                 }
                 // console.log(light);
-                if(position>=0)
+                if(lane===5 && position>=1)
+                {
+                    if (!occ_pos.some(pos => pos[0] === lane && pos[1] === position)) {
+                        occ_pos.push([lane, position]); // Only add if it doesn't exist
+                    }
+                    if(position===1)
+                    {
+                        moveCarRight(car);
+                        console.log('right');
+                        occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    }
+                    else if ((position !== 1) && !occ_pos.some(pos => pos[0] === lane && pos[1] === position - 1)) {
+                        // Move the car forward
+                        moveCarFront(car);
+                        occ_pos.push([lane, position-1]);
+                        occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position); // Remove the old position
+                    }
+                }
+                else if(position>=0)
                 {
                     // Check if the car's current position is already tracked
                     if (!occ_pos.some(pos => pos[0] === lane && pos[1] === position)) {
                         occ_pos.push([lane, position]); // Only add if it doesn't exist
                     }
-                    if(lane===5 && position===1){
-                        moveCarRight(car);
-                        console.log('right');
-                        occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
-                    }
-                    else if (car.position.z <= 140 && car.position.x===75) {
-                        moveCarRight(car);
-                        occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
-                    }
-                    else if (position === 0 && light=='green') {
+                    // if(lane===5 && position===1){
+                    //     moveCarRight(car);
+                    //     console.log('right');
+                    //     occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    // }
+                    // else if (car.position.z <= 140 && car.position.x===75) {
+                    //     moveCarRight(car);
+                    //     occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    // }else
+                    if (position === 0 && light=='green') {
                         switch (lane) {
                             case 0:
                                 moveCarLeft1(car);
@@ -160,7 +181,8 @@ Promise.all([
      
                         
 
-                        if (position === 7 && lane === 2 ) {
+                        let randomInt=THREE.MathUtils.randInt(0,1)
+                        if (position === 7 && lane === 2 && randomInt===0) {
                             changeLane(car, 'left');
                             occ_pos.push([lane-1, position-1]);
                             
@@ -187,8 +209,13 @@ Promise.all([
                 // console.log(occ_pos);
 
                 // Remove the car from the scene if it goes beyond z = -450
+                
                 if (car.position.z < -400 || car.position.x > 400 || car.position.x < -400) {
-                    scene.remove(car);
+                    let randomInt=THREE.MathUtils.randInt(0,2)
+                    car.position.z=450;
+                    car.position.x=30+randomInt *15
+                    car.rotation.y=Math.PI;
+                    // scene.remove(car);
                 }
             });
         });
@@ -204,13 +231,16 @@ Promise.all([
             [cars['Porsche'][0]],
             [cars['Porsche'][4]],
             [cars['Porsche'][8]],
-            // [cars['Mustang'][0]],
-            // [cars['Mustang'][4]],
-            // [cars['Mustang'][8]],
+            [cars['Mustang'][0]],
+            [cars['Mustang'][4]],
+            [cars['Mustang'][8]],
         ];
         carModels.forEach(carArray => {
             carArray.forEach(car => {
-                const lane = Math.floor(-car.position.x / 15);
+                let lane=5;
+                if(-car.position.x<70){
+                    lane = Math.floor(-car.position.x / 15);
+                }
                 const position = Math.floor((-car.position.z - 90) / 30);
                 let light = 'red';
     
@@ -246,7 +276,8 @@ Promise.all([
                         moveCarRight1(car);
                         occ_pos1 = occ_pos1.filter(pos => pos[0] !== lane || pos[1] !== position);
                     } else if ((position !== 0 || light === 'green') && !occ_pos1.some(pos => pos[0] === lane && pos[1] === position - 1)) {
-                        if (position === 7 && lane === 2) {
+                        let randomInt=THREE.MathUtils.randInt(0,1)
+                        if (position === 7 && lane === 2 && randomInt===0) {
                             changeLane1(car, 'left');
                             occ_pos1.push([lane - 1, position - 1]);
                         } else if (position === 5 && lane === 1 && !occ_pos1.some(pos => pos[0] === lane - 1 && pos[1] === position - 1)) {
@@ -268,7 +299,11 @@ Promise.all([
                 console.log(`Final occ_pos1:`, occ_pos1);
                 
                 if (car.position.z > 410|| car.position.x > 410 || car.position.x < -410) {
-                    scene.remove(car);
+                    let randomInt=THREE.MathUtils.randInt(0,2)
+                    car.position.z=-450;
+                    car.position.x=-(30+randomInt *15)
+                    car.rotation.y=0;
+                    // scene.remove(car);
                 }
             });
         });
@@ -284,13 +319,16 @@ Promise.all([
             [cars['Porsche'][2]],
             [cars['Porsche'][6]],
             [cars['Porsche'][10]],
-            // [cars['Mustang'][2]],
-            // [cars['Mustang'][6]],
-            // [cars['Mustang'][10]],
+            [cars['Mustang'][2]],
+            [cars['Mustang'][6]],
+            [cars['Mustang'][10]],
         ];
         carModels.forEach(carArray => {
             carArray.forEach(car => {
-                const lane = Math.floor(car.position.z / 15);
+                let lane=5;
+                if(car.position.z<70){
+                    lane = Math.floor(car.position.z / 15);
+                }
                 const position = Math.floor((-car.position.x - 90) / 30);
                 let light = 'red';
     
@@ -326,7 +364,8 @@ Promise.all([
                         moveCarRight2(car);
                         occ_pos2 = occ_pos2.filter(pos => pos[0] !== lane || pos[1] !== position);
                     } else if ((position !== 0 || light === 'green') && !occ_pos2.some(pos => pos[0] === lane && pos[1] === position - 1)) {
-                        if (position === 7 && lane === 2) {
+                        let randomInt=THREE.MathUtils.randInt(0,1)
+                        if (position === 7 && lane === 2 && randomInt===0) {
                             changeLane2(car, 'left');
                             occ_pos2.push([lane - 1, position - 1]);
                         } else if (position === 5 && lane === 1 && !occ_pos2.some(pos => pos[0] === lane - 1 && pos[1] === position - 1)) {
@@ -348,7 +387,11 @@ Promise.all([
                 console.log(`Final occ_pos2:`, occ_pos2);
                 
                 if (car.position.x > 400 || car.position.z > 400 || car.position.z < -400) {
-                    scene.remove(car);
+                    let randomInt=THREE.MathUtils.randInt(0,2)
+                    car.position.x=-450;
+                    car.position.z=30+randomInt *15
+                    car.rotation.y=Math.PI/2;
+                    // scene.remove(car);
                 }
             });
         });
@@ -370,7 +413,10 @@ Promise.all([
         ];
         carModels.forEach(carArray => {
             carArray.forEach(car => {
-                const lane = Math.floor(-car.position.z / 15);
+                let lane=5;
+                if(-car.position.z<70){
+                    lane = Math.floor(-car.position.z / 15);
+                }
                 const position = Math.floor((car.position.x - 90) / 30);
                 let light = 'red';
     
@@ -406,7 +452,8 @@ Promise.all([
                         moveCarRight3(car);
                         occ_pos3 = occ_pos3.filter(pos => pos[0] !== lane || pos[1] !== position);
                     } else if ((position !== 0 || light === 'green') && !occ_pos3.some(pos => pos[0] === lane && pos[1] === position - 1)) {
-                        if (position === 7 && lane === 2) {
+                        let randomInt=THREE.MathUtils.randInt(0,1)
+                        if (position === 7 && lane === 2 && randomInt===0) {
                             changeLane3(car, 'left');
                             occ_pos3.push([lane - 1, position - 1]);
                         } else if (position === 5 && lane === 1 && !occ_pos3.some(pos => pos[0] === lane - 1 && pos[1] === position - 1)) {
@@ -428,7 +475,11 @@ Promise.all([
                 console.log(`Final occ_pos3:`, occ_pos3);
                 
                 if (car.position.x < -400 || car.position.z > 400 || car.position.z < -400) {
-                    scene.remove(car);
+                    let randomInt=THREE.MathUtils.randInt(0,2)
+                    car.position.x=450;
+                    car.position.z=-(30+randomInt *15)
+                    car.rotation.y=-Math.PI/2;
+                    // scene.remove(car);
                 }
             });
         });
