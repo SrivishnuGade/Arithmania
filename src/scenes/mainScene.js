@@ -38,18 +38,70 @@ controls.dampingFactor = 0.1;
 initLighting(scene);
 initGround(scene);
 initSky(scene);
-const cloudTexture = new THREE.TextureLoader().load('/assets/images/clouds.jpg'); // Load cloud texture
-const cloudMaterial = new THREE.SpriteMaterial({ map: cloudTexture, transparent: false, opacity: 0.7 });
 const clouds = [];
 
-for (let i = 0; i < 30; i++) {
-    const cloud = new THREE.Sprite(cloudMaterial);
-    cloud.scale.set(50, 25, 1); // Smaller size for clouds
-    cloud.position.set(Math.random() * 1000 - 500, Math.random() * 1 + 150, Math.random() * 1000 - 500); // Positioned near the ceiling
+function createParticulateCloud() {
+    const cloudGroup = new THREE.Group();
+    
+    const particleMaterial = new THREE.MeshPhongMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.4,
+        depthWrite: false,
+    });
+
+    const particleGeometry = new THREE.SphereGeometry(5, 20, 5); // Tiny spheres for fine particles
+
+    // Create multiple particles to form a fluffy cloud
+    for (let i = 0; i < 1000; i++) {
+        const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+
+        // Randomly position each particle in a loosely clustered formation
+        particle.position.set(
+            (Math.random() - 5) * 10, // x position
+            (Math.random() - 5) * 5, // y position
+            (Math.random() - 5) * 10  // z position
+        );
+
+        // Randomize size slightly for a natural look
+        particle.scale.setScalar(Math.random() * 0.5 + 0.5);
+        cloudGroup.add(particle);
+    }
+
+    // Set the overall position of the cloud cluster
+    cloudGroup.position.set(
+        Math.random() * 400 - 400, // x position within -200 to 200
+        100 + Math.random() * 250,   // height above ground
+        Math.random() * 400 - 400  // z position within -200 to 200
+    );
+
+    return cloudGroup;
+}
+
+// Add multiple particulate clouds to the scene
+for (let i = 0; i < 10; i++) {
+    const cloud = createParticulateCloud();
+    cloud.position.set(
+        Math.random() * 400 - 400, // x position within -200 to 200
+        100 + Math.random() * 250,   // height above ground
+        Math.random() * 400 - 400  // z position within -200 to 200
+    )
     clouds.push(cloud);
     scene.add(cloud);
 }
-    
+
+// Add multiple particulate clouds to the scene
+for (let i = 0; i < 10; i++) {
+    const cloud = createParticulateCloud();
+    cloud.position.set(
+        Math.random() * 400 + 400, // x position within -200 to 200
+        100 + Math.random() * 200,   // height above ground
+        Math.random() * 400 + 400  // z position within -200 to 200
+    )
+    clouds.push(cloud);
+    scene.add(cloud);
+}
+
 // Define joystick element and active car
 //let joystickElement = null;
 let activeCar = null; 
@@ -83,6 +135,19 @@ Promise.all([
     // loadModel(scene,'Civic', '/assets/civic/scene.gltf', 500, 0, 75, 12)
 ]).then(() => {
     console.log('All models loaded:', cars);
+    scene.remove(cars['Mustang'][1]);
+    scene.remove(cars['Mustang'][5]);
+    scene.remove(cars['Mustang'][9]);
+    scene.remove(cars['Focus'][8]);
+    scene.remove(cars['Mustang'][0]);
+    scene.remove(cars['Mustang'][4]);
+    scene.remove(cars['Mustang'][8]);
+    scene.remove(cars['Mustang'][2]);
+    scene.remove(cars['Mustang'][6]);
+    scene.remove(cars['Mustang'][10]);
+    scene.remove(cars['Focus'][11]);
+
+
     setInterval(() => {
         // Define the cars you want to include in the loop
         const carModels = [
@@ -95,9 +160,9 @@ Promise.all([
             [cars['Porsche'][1]],
             [cars['Porsche'][5]],
             [cars['Porsche'][9]],
-            [cars['Mustang'][1]],
-            [cars['Mustang'][5]],
-            [cars['Mustang'][9]],
+            // [cars['Mustang'][1]],
+            // [cars['Mustang'][5]],
+            // [cars['Mustang'][9]],
         ];
 
         // Loop over each car array and each car within those arrays
@@ -116,7 +181,16 @@ Promise.all([
                     if (!occ_pos.some(pos => pos[0] === lane && pos[1] === position)) {
                         occ_pos.push([lane, position]); // Only add if it doesn't exist
                     }
-                    if (position === 0 && light=='green') {
+                    if(lane===5 && position===1){
+                        moveCarRight(car);
+                        console.log('right');
+                        occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    }
+                    else if (car.position.z <= 140 && car.position.x===75) {
+                        moveCarRight(car);
+                        occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
+                    }
+                    else if (position === 0 && light=='green') {
                         switch (lane) {
                             case 0:
                                 moveCarLeft1(car);
@@ -131,15 +205,8 @@ Promise.all([
                                 break;
                         }
                         occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
-                    }else if(lane===5 && position===1){
-                        moveCarRight(car);
-                        console.log('right');
-                        occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
                     }
-                    else if (car.position.z <= 140 && car.position.x===75) {
-                        moveCarRight(car);
-                        occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
-                    }
+                    
                     else if ((position !== 0 || light=='green') && !occ_pos.some(pos => pos[0] === lane && pos[1] === position - 1)) {
                         // Move the car forward
      
@@ -172,7 +239,7 @@ Promise.all([
                 // console.log(occ_pos);
 
                 // Remove the car from the scene if it goes beyond z = -450
-                if (car.position.z < -450) {
+                if (car.position.z < -400 || car.position.x > 400 || car.position.x < -400) {
                     scene.remove(car);
                 }
             });
@@ -184,14 +251,14 @@ Promise.all([
             [cars['Boxster'][4]],
             [cars['Focus'][0]],
             [cars['Boxster'][0]],
-            [cars['Focus'][8]],
+            // [cars['Focus'][8]],
             [cars['Boxster'][8]],
             [cars['Porsche'][0]],
             [cars['Porsche'][4]],
             [cars['Porsche'][8]],
-            [cars['Mustang'][0]],
-            [cars['Mustang'][4]],
-            [cars['Mustang'][8]],
+            // [cars['Mustang'][0]],
+            // [cars['Mustang'][4]],
+            // [cars['Mustang'][8]],
         ];
         carModels.forEach(carArray => {
             carArray.forEach(car => {
@@ -252,7 +319,7 @@ Promise.all([
     
                 console.log(`Final occ_pos1:`, occ_pos1);
                 
-                if (car.position.z < -450) {
+                if (car.position.z > 410|| car.position.x > 410 || car.position.x < -410) {
                     scene.remove(car);
                 }
             });
@@ -269,9 +336,9 @@ Promise.all([
             [cars['Porsche'][2]],
             [cars['Porsche'][6]],
             [cars['Porsche'][10]],
-            [cars['Mustang'][2]],
-            [cars['Mustang'][6]],
-            [cars['Mustang'][10]],
+            // [cars['Mustang'][2]],
+            // [cars['Mustang'][6]],
+            // [cars['Mustang'][10]],
         ];
         carModels.forEach(carArray => {
             carArray.forEach(car => {
@@ -332,7 +399,7 @@ Promise.all([
     
                 console.log(`Final occ_pos2:`, occ_pos2);
                 
-                if (car.position.z < -450) {
+                if (car.position.x > 400 || car.position.z > 400 || car.position.z < -400) {
                     scene.remove(car);
                 }
             });
@@ -344,7 +411,7 @@ Promise.all([
             [cars['Boxster'][7]],
             [cars['Focus'][3]],
             [cars['Boxster'][3]],
-            [cars['Focus'][11]],
+            // [cars['Focus'][11]],
             [cars['Boxster'][11]],
             [cars['Porsche'][3]],
             [cars['Porsche'][7]],
@@ -412,7 +479,7 @@ Promise.all([
     
                 console.log(`Final occ_pos3:`, occ_pos3);
                 
-                if (car.position.z < -450) {
+                if (car.position.x < -400 || car.position.z > 400 || car.position.z < -400) {
                     scene.remove(car);
                 }
             });
@@ -636,6 +703,18 @@ function controlTrafficSignals() {
             { lights: [l1, l2], duration: 3000 },   // Next green for 5 seconds
             { lights: [l3, l4], duration: 3000 },   // Next green for 5 seconds
         ],
+        3:[
+            { lights: [st1, l1], duration: 3000 }, // st1 and l1 green for 5 seconds
+            { lights: [st2, l2], duration: 3000 }, // st2 and l2 green for 5 seconds
+            { lights: [st3, st4], duration: 3000 }, // st3 and l3 green for 5 seconds
+            { lights: [l3, l4], duration: 3000 }, // st4 and l4 green for 5 seconds
+        ],
+        4:[
+            { lights: [st1, st2], duration: 3000 }, // st1 and l1 green for 5 seconds
+            { lights: [l1, l2], duration: 3000 }, // st2 and l2 green for 5 seconds
+            { lights: [st3, l3], duration: 3000 }, // st3 and l3 green for 5 seconds
+            { lights: [st4, l4], duration: 3000 }, // st4 and l4 green for 5 seconds
+        ]
     };
 
     let index = 0;
@@ -680,6 +759,13 @@ function switchPattern(event) {
     } else if (event.key === '2') {
         currentPattern = 2; // Switch to pattern 2
         console.log("Switched to Pattern 2");
+    } else if (event.key === '3') {
+        currentPattern = 3; // Switch to pattern 3
+        console.log("Switched to Pattern 3");
+    }
+    else if (event.key === '4') {
+        currentPattern = 4; // Switch to pattern 3
+        console.log("Switched to Pattern 4");
     }
 }
 
@@ -699,5 +785,3 @@ function animateCloud() {
 }
 
 animateCloud();
-
-
