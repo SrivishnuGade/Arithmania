@@ -810,6 +810,10 @@ function showPlaceholderBox(pattern) {
     placeholderBox.style.justifyContent = 'center';
     placeholderBox.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.3)';
     placeholderBox.style.zIndex = '1000'; // Ensure it’s on top of other elements
+    
+    // Add fade-in effect initially
+    placeholderBox.style.opacity = 1;
+    placeholderBox.style.transition = 'opacity 1s ease-out'; // Transition for opacity
 
     // Create the image element for the placeholder
     const img = document.createElement('img');
@@ -826,7 +830,18 @@ function showPlaceholderBox(pattern) {
 
     // Append the placeholder box to the document body
     document.body.appendChild(placeholderBox);
+
+    // Start fade-out after 5 seconds
+    setTimeout(() => {
+        placeholderBox.style.opacity = 0; // Start fade-out
+    }, 4000); // Fade out after 5 seconds
+
+    // Remove the placeholder box from the DOM after 5 seconds (allow fade-out to complete)
+    setTimeout(() => {
+        placeholderBox.remove();
+    }, 5000); // 1 second after fade-out starts (total of 5 seconds for the complete cycle)
 }
+
 
 
 // Function to switch patterns based on user input
