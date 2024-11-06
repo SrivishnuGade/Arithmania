@@ -787,23 +787,69 @@ function stopTrafficSignals() {
     isRunning = false;
 }
 
+// Function to create or update the placeholder box with the correct image
+function showPlaceholderBox(pattern) {
+    // Remove any existing placeholder box
+    let existingBox = document.getElementById('placeholderBox');
+    if (existingBox) {
+        existingBox.remove();
+    }
+
+    // Create a new placeholder box
+    const placeholderBox = document.createElement('div');
+    placeholderBox.id = 'placeholderBox';
+    placeholderBox.style.position = 'absolute';
+    placeholderBox.style.top = '10px';
+    placeholderBox.style.left = '10px';
+    placeholderBox.style.width = '600px';
+    placeholderBox.style.height = '400px';
+    placeholderBox.style.border = '2px solid #333';
+    placeholderBox.style.backgroundColor = '#fff';
+    placeholderBox.style.display = 'flex';
+    placeholderBox.style.alignItems = 'center';
+    placeholderBox.style.justifyContent = 'center';
+    placeholderBox.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.3)';
+    placeholderBox.style.zIndex = '1000'; // Ensure it’s on top of other elements
+
+    // Create the image element for the placeholder
+    const img = document.createElement('img');
+    img.src = `./assets/patterns/pattern${pattern}.png`; // Set the correct image path based on pattern
+    img.alt = `Pattern ${pattern}`;
+    
+    // Ensure the image fits properly within the box
+    img.style.width = '100%';  // Fill the width of the placeholder box
+    img.style.height = '100%'; // Fill the height of the placeholder box
+    img.style.objectFit = 'contain';  // Ensure the image scales within the box without cropping
+
+    // Append the image to the placeholder box
+    placeholderBox.appendChild(img);
+
+    // Append the placeholder box to the document body
+    document.body.appendChild(placeholderBox);
+}
+
+
 // Function to switch patterns based on user input
 function switchPattern(event) {
     if (event.key === '1') {
         currentPattern = 1; // Switch to pattern 1
         console.log("Switched to Pattern 1");
+        showPlaceholderBox(1); // Display image for pattern 1
     } else if (event.key === '2') {
         currentPattern = 2; // Switch to pattern 2
         console.log("Switched to Pattern 2");
+        showPlaceholderBox(2); // Display image for pattern 2
     } else if (event.key === '3') {
         currentPattern = 3; // Switch to pattern 3
         console.log("Switched to Pattern 3");
-    }
-    else if (event.key === '4') {
-        currentPattern = 4; // Switch to pattern 3
+        showPlaceholderBox(3); // Display image for pattern 3
+    } else if (event.key === '4') {
+        currentPattern = 4; // Switch to pattern 4
         console.log("Switched to Pattern 4");
+        showPlaceholderBox(4); // Display image for pattern 4
     }
 }
+
 
 document.addEventListener('keydown', switchPattern);
 
