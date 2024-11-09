@@ -801,19 +801,21 @@ function showPlaceholderBox(pattern) {
     placeholderBox.style.position = 'absolute';
     placeholderBox.style.top = '10px';
     placeholderBox.style.left = '10px';
-    placeholderBox.style.width = '600px';
-    placeholderBox.style.height = '400px';
+    
+    // Use viewport units for consistent sizing across browsers
+    placeholderBox.style.width = '20vw'; // 20% of viewport width
+    placeholderBox.style.height = '15vh'; // 15% of viewport height
+
+    // Additional styling for the placeholder box
     placeholderBox.style.border = '2px solid #333';
     placeholderBox.style.backgroundColor = '#fff';
     placeholderBox.style.display = 'flex';
     placeholderBox.style.alignItems = 'center';
     placeholderBox.style.justifyContent = 'center';
     placeholderBox.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.3)';
-    placeholderBox.style.zIndex = '1000'; // Ensure it’s on top of other elements
-    
-    // Add fade-in effect initially
+    placeholderBox.style.zIndex = '1000';
     placeholderBox.style.opacity = 1;
-    placeholderBox.style.transition = 'opacity 1s ease-out'; // Transition for opacity
+    placeholderBox.style.transition = 'opacity 1s ease-out';
 
     // Create the image element for the placeholder
     const img = document.createElement('img');
@@ -821,9 +823,9 @@ function showPlaceholderBox(pattern) {
     img.alt = `Pattern ${pattern}`;
     
     // Ensure the image fits properly within the box
-    img.style.width = '100%';  // Fill the width of the placeholder box
-    img.style.height = '100%'; // Fill the height of the placeholder box
-    img.style.objectFit = 'contain';  // Ensure the image scales within the box without cropping
+    img.style.width = '100%';  // Adjust to fit the width of the placeholder box
+    img.style.height = '100%'; // Adjust to fit the height of the placeholder box
+    img.style.objectFit = 'contain';
 
     // Append the image to the placeholder box
     placeholderBox.appendChild(img);
@@ -834,12 +836,12 @@ function showPlaceholderBox(pattern) {
     // Start fade-out after 5 seconds
     setTimeout(() => {
         placeholderBox.style.opacity = 0; // Start fade-out
-    }, 4000); // Fade out after 5 seconds
+    }, 4000); // Wait 4 seconds before starting fade-out
 
-    // Remove the placeholder box from the DOM after 5 seconds (allow fade-out to complete)
+    // Remove the placeholder box from the DOM after fade-out
     setTimeout(() => {
         placeholderBox.remove();
-    }, 5000); // 1 second after fade-out starts (total of 5 seconds for the complete cycle)
+    }, 5000); // Total delay of 5 seconds (1 second fade-out duration)
 }
 
 
