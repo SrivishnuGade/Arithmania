@@ -56,6 +56,7 @@ function analyzeTrafficColors(canvas) {
 
     let redPixels = 0;
     let orangePixels = 0;
+    let yellowPixels = 0;
     let greenPixels = 0;
 
     for (let i = 0; i < data.length; i += 4) {
@@ -67,57 +68,70 @@ function analyzeTrafficColors(canvas) {
             redPixels++;
         } else if (isOrange(r, g, b)) {
             orangePixels++;
+        } else if (isYellow(r, g, b)) {
+            yellowPixels++;
         } else if (isGreen(r, g, b)) {
             greenPixels++;
         }
     }
 
-    const totalPixels = redPixels + orangePixels + greenPixels;
+    const totalPixels = redPixels + orangePixels + yellowPixels + greenPixels;
     const redDensity = (redPixels / totalPixels) * 100;
     const orangeDensity = (orangePixels / totalPixels) * 100;
+    const yellowDensity = (yellowPixels / totalPixels) * 100;
     const greenDensity = (greenPixels / totalPixels) * 100;
 
-    return { redDensity, orangeDensity, greenDensity };
+    console.log(`Pixel Counts - Red: ${redPixels}, Orange: ${orangePixels}, Yellow: ${yellowPixels}, Green: ${greenPixels}`);
+    return { redDensity, orangeDensity, yellowDensity, greenDensity };
 }
 
-function updateTrafficDisplay({ redDensity, orangeDensity, greenDensity }) {
-    const totalCars = 100;
+function updateTrafficDisplay({ redDensity, orangeDensity, yellowDensity, greenDensity }) {
+    const baseCarCount = 100;
+    const dynamicCarCount = Math.floor(baseCarCount * (redDensity + orangeDensity + yellowDensity + greenDensity) / 100);
 
-    const carsToRemoveRed = Math.round((redDensity / 100) * totalCars * 0.6);
-    const carsToRemoveOrange = Math.round((orangeDensity / 100) * totalCars * 0.3);
-    const carsToRemoveGreen = Math.round((greenDensity / 100) * totalCars * 0.1);
+    const carsToRemoveRed = Math.round((redDensity / 100) * dynamicCarCount * 0.6);
+    const carsToRemoveOrange = Math.round((orangeDensity / 100) * dynamicCarCount * 0.4);
+    const carsToRemoveYellow = Math.round((yellowDensity / 100) * dynamicCarCount * 0.2);
+    const carsToRemoveGreen = Math.round((greenDensity / 100) * dynamicCarCount * 0.05);
 
-    const carsRemoved = carsToRemoveRed + carsToRemoveOrange + carsToRemoveGreen;
+    const carsRemoved = carsToRemoveRed + carsToRemoveOrange + carsToRemoveYellow + carsToRemoveGreen;
 
     const trafficInfo = document.getElementById("traffic-info");
     if (trafficInfo) {
         trafficInfo.innerHTML = `
             <p><strong>Traffic Density Analysis:</strong></p>
             <p>High (Red): ${redDensity.toFixed(2)}%</p>
-            <p>Medium (Orange): ${orangeDensity.toFixed(2)}%</p>
-            <p>Low (Green): ${greenDensity.toFixed(2)}%</p>
+            <p>Moderate (Orange): ${orangeDensity.toFixed(2)}%</p>
+            <p>Light (Yellow): ${yellowDensity.toFixed(2)}%</p>
+            <p>No Traffic (Green): ${greenDensity.toFixed(2)}%</p>
             <p>Total Cars Removed: ${carsRemoved}</p>
         `;
     }
 }
+
+// Updated color classification thresholds
+function isRed(r, g, b) {
+    return r > 180 && g < 80 && b < 80;  // High traffic red
+}
+
+function isOrange(r, g, b) {
+    return r > 180 && g > 100 && g < 160 && b < 80;  // Moderate traffic orange
+}
+
+function isYellow(r, g, b) {
+    return r > 200 && g > 160 && g < 220 && b < 80;  // Light traffic yellow
+}
+
+function isGreen(r, g, b) {
+    return g > 180 && r < 100 && b < 100;  // No traffic green
+}
+
 
 function updateTrafficDisplayPlaceholder(message) {
     const trafficInfo = document.getElementById("traffic-info");
     if (trafficInfo) {
         trafficInfo.innerHTML = `<p>${message}</p>`;
     }
-}
-
-function isRed(r, g, b) {
-    return r > 200 && g < 100 && b < 100;
-}
-
-function isOrange(r, g, b) {
-    return r > 200 && g > 100 && g < 200 && b < 100;
-}
-
-function isGreen(r, g, b) {
-    return g > 150 && r < 100 && b < 100;
 }
 
 // Insert a container in the HTML to display traffic density information
