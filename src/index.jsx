@@ -39,7 +39,7 @@ window.initMap = function() {
 function captureAndAnalyzeMap() {
     const mapElement = document.getElementById("map");
 
-    html2canvas(mapElement).then((canvas) => {
+    html2canvas(mapElement, { scale: 3, useCORS: true, allowTaint: true }).then((canvas) => {
         console.log("Canvas captured.");
         const trafficDensity = analyzeTrafficColors(canvas);
         updateTrafficDisplay(trafficDensity);
@@ -47,22 +47,29 @@ function captureAndAnalyzeMap() {
         console.error("Error capturing canvas:", error);
         updateTrafficDisplayPlaceholder("Error capturing traffic data.");
     });
+    
 }
 
 function analyzeTrafficColors(canvas) {
     const ctx = canvas.getContext("2d");
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
+    /*const laneData = ctx.getImageData(canvas.width * 0.3, canvas.height * 0.4, canvas.width * 0.4, canvas.height * 0.2);
+    const data = laneData.data;*/
 
     let redPixels = 0;
     let orangePixels = 0;
     let yellowPixels = 0;
     let greenPixels = 0;
 
+    // Iterate over each pixel and classify it based on the color ranges
     for (let i = 0; i < data.length; i += 4) {
         const r = data[i];
         const g = data[i + 1];
         const b = data[i + 2];
+
+        // Debugging: Log RGB values for analysis
+        // console.log(`RGB: ${r}, ${g}, ${b}`);
 
         if (isRed(r, g, b)) {
             redPixels++;
@@ -81,7 +88,7 @@ function analyzeTrafficColors(canvas) {
     const yellowDensity = (yellowPixels / totalPixels) * 100;
     const greenDensity = (greenPixels / totalPixels) * 100;
 
-    console.log(`Pixel Counts - Red: ${redPixels}, Orange: ${orangePixels}, Yellow: ${yellowPixels}, Green: ${greenPixels}`);
+    //console.log(`Pixel Counts - Red: ${redPixels}, Orange: ${orangePixels}, Yellow: ${yellowPixels}, Green: ${greenPixels}`);
     return { redDensity, orangeDensity, yellowDensity, greenDensity };
 }
 
@@ -109,21 +116,20 @@ function updateTrafficDisplay({ redDensity, orangeDensity, yellowDensity, greenD
     }
 }
 
-// Updated color classification thresholds
 function isRed(r, g, b) {
-    return r > 180 && g < 80 && b < 80;  // High traffic red
+    return r > 160 && g < 80 && b < 80; // Slightly increased red threshold
 }
 
 function isOrange(r, g, b) {
-    return r > 180 && g > 100 && g < 160 && b < 80;  // Moderate traffic orange
+    return r > 180 && r <= 250 && g > 100 && g <= 180 && b < 90; // Broadened orange range by increasing the upper limit for red
 }
 
 function isYellow(r, g, b) {
-    return r > 200 && g > 160 && g < 220 && b < 80;  // Light traffic yellow
+    return r > 200 && g > 170 && g <= 255 && b > 60 && b < 120; // Left mostly the same but fine-tuned
 }
 
 function isGreen(r, g, b) {
-    return g > 180 && r < 100 && b < 100;  // No traffic green
+    return r < 110 && g > 170 && g <= 255 && b < 170; // Limited red and blue to avoid overlap with yellow
 }
 
 
