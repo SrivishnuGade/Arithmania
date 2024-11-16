@@ -739,13 +739,13 @@ function controlTrafficSignals() {
             { lights: [l1, l2], duration: 3000 },   // Next green for 5 seconds
             { lights: [l3, l4], duration: 3000 },   // Next green for 5 seconds
         ],
-        3:[
+        4:[
             { lights: [st1, l1], duration: 3000 }, // st1 and l1 green for 5 seconds
             { lights: [st2, l2], duration: 3000 }, // st2 and l2 green for 5 seconds
             { lights: [st3, st4], duration: 3000 }, // st3 and l3 green for 5 seconds
             { lights: [l3, l4], duration: 3000 }, // st4 and l4 green for 5 seconds
         ],
-        4:[
+        3:[
             { lights: [st1, st2], duration: 3000 }, // st1 and l1 green for 5 seconds
             { lights: [l1, l2], duration: 3000 }, // st2 and l2 green for 5 seconds
             { lights: [st3, l3], duration: 3000 }, // st3 and l3 green for 5 seconds
