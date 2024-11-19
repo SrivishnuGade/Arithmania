@@ -17,6 +17,8 @@ import { moveCarRight, moveCarRight1, moveCarRight2, moveCarRight3 ,
     changeLane,changeLane1,changeLane2,changeLane3
 } from '../movements/carMovements.js';
 
+
+
 const scene = new THREE.Scene();
 initFog(scene);
 
@@ -27,6 +29,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.domElement.id = "myCanvas";
 document.body.appendChild(renderer.domElement);
 
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -34,6 +37,7 @@ controls.minPolarAngle = 0;
 controls.maxPolarAngle = Math.PI / 2;
 controls.enableDamping = true;
 controls.dampingFactor = 0.1;
+
 
 initLighting(scene);
 initGround(scene);
@@ -86,69 +90,275 @@ for (let i = 0; i < 10; i++) {
     scene.add(cloud);
 }
 
-    
-// Define joystick element and active car
-//let joystickElement = null;
-let activeCar = null; 
+import html2canvas from 'html2canvas';
 
-// Function called when a car model is loaded
-function onCarLoaded(carModel) {
-    console.log(`${carModel.name} loaded`);
-    carModel.name = 'selectedCar';
+let traffic_level = 'high';
 
-    // If there's an active car, remove joystick control from it
-    if (activeCar) {
-        removeJoystickControl(activeCar);
-        resetJoystick(); // Hide the joystick if switching cars
+const loadGoogleMapsScript = () => {
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&callback=initMap&v=weekly`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = function() {
+        console.error("Error loading Google Maps script, setting traffic level to high by default.");
+        updateTrafficDisplayPlaceholder("Google Maps API not available, defaulting to high traffic.");
+        loadCars("high");
+        console.log("Traffic is high, triggering alternative operations...");
+    };
+    document.head.appendChild(script);
+};
+loadGoogleMapsScript();
+
+
+window.initMap = function () {
+    if (typeof google === 'undefined' || !google.maps) {
+        console.error("Google Maps API not available, setting traffic level to high by default.");
+        updateTrafficDisplayPlaceholder("Google Maps API not available, defaulting to high traffic.");
+        loadCars("high");
+        console.log("Traffic is high, triggering alternative operations...");
+        return;
     }
+    const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 20,
+        center: { lat: 12.9254, lng: 77.55005 },
+    });
 
-    // Show the joystick and set up control for the new car model
-    joystickElement.style.display = 'block'; // Show the joystick
-    setupJoystick(scene, camera, carModel);
-    activeCar = carModel;  // Update the active car
+    const trafficLayer = new google.maps.TrafficLayer();
+    trafficLayer.setMap(map);
+
+    updateTrafficDisplayPlaceholder("Calculating traffic density...");
+
+    waitForBaseMapTilesToLoad(map)
+        .then(() => {
+            console.log("Map and Traffic Layer ready for density calculation.");
+            return calculateTrafficDensity(document.getElementById("map"));
+        })
+        .then((trafficLevel) => {
+            console.log(`Traffic density calculated: ${trafficLevel}`);
+            loadCars(trafficLevel);
+            if (trafficLevel === "low") {
+                console.log("Traffic is low, performing specific operations...");
+            } else if (trafficLevel === "medium") {
+                console.log("Traffic is medium, executing other logic...");
+            } else {
+                console.log("Traffic is high, triggering alternative operations...");
+            }
+        })
+        .catch((error) => {
+            console.error("Error during map load or analysis:", error);
+            updateTrafficDisplayPlaceholder("Error loading map or analyzing traffic.");
+        });
+};
+
+
+function waitForBaseMapTilesToLoad(map) {
+    return new Promise((resolve, reject) => {
+        console.log("Waiting for base map tiles to load...");
+
+        let resolved = false; // Flag to ensure no double resolve
+
+        const fallbackTimeout = setTimeout(() => {
+            if (!resolved) {
+                console.log("Fallback triggered: Proceeding without tilesloaded.");
+                resolved = true;
+                resolve();
+            }
+        }, 5000); // 5 seconds fallback
+
+        google.maps.event.addListenerOnce(map, "tilesloaded", () => {
+            if (!resolved) {
+                console.log("Base map tiles loaded event fired.");
+                clearTimeout(fallbackTimeout);
+                resolved = true;
+                resolve();
+            }
+        });
+
+        google.maps.event.addListenerOnce(map, "loaderror", () => {
+            if (!resolved) {
+                console.error("Error loading base map tiles.");
+                clearTimeout(fallbackTimeout);
+                resolved = true;
+                reject(new Error("Error loading base map tiles."));
+            }
+        });
+    });
 }
 
+function calculateTrafficDensity(map) {
+    return new Promise((resolve, reject) => {
+        console.log("Starting traffic density calculation...");
 
-// Call this function once during the initialization phase
-createJoystick();
+        // Use html2canvas to capture the map
+        html2canvas(map, { scale: 3, useCORS: true, allowTaint: true })
+            .then((canvas) => {
+                console.log("Canvas captured.");
+                const trafficDensity = analyzeTrafficColors(canvas);
+                const trafficLevel = updateTrafficDisplay(trafficDensity);
+                resolve(trafficLevel); // Resolve the Promise with the calculated traffic level
+            })
+            .catch((error) => {
+                console.error("Error capturing canvas:", error);
+                updateTrafficDisplayPlaceholder("Error capturing traffic data.");
+                reject(error); // Reject the Promise on error
+            });
+    });
+}
 
+function analyzeTrafficColors(canvas) {
+    const ctx = canvas.getContext("2d");
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    let redPixels = 0;
+    let orangePixels = 0;
+    let yellowPixels = 0;
+    let greenPixels = 0;
+
+    // Iterate over each pixel and classify it based on the color ranges
+    for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        if (isRed(r, g, b)) {
+            redPixels++;
+        } else if (isOrange(r, g, b)) {
+            orangePixels++;
+        } else if (isYellow(r, g, b)) {
+            yellowPixels++;
+        } else if (isGreen(r, g, b)) {
+            greenPixels++;
+        }
+    }
+
+    const totalPixels = redPixels + orangePixels + yellowPixels + greenPixels;
+    const redDensity = (redPixels / totalPixels) * 100;
+    const orangeDensity = (orangePixels / totalPixels) * 100;
+    const yellowDensity = (yellowPixels / totalPixels) * 100;
+    const greenDensity = (greenPixels / totalPixels) * 100;
+
+    return { redDensity, orangeDensity, yellowDensity, greenDensity };
+}
+
+function updateTrafficDisplay({ redDensity, orangeDensity, yellowDensity, greenDensity }) {
+    let calc_traffic_level = 'high';
+    if (greenDensity > 75) {
+        calc_traffic_level = 'low';
+    } else if (redDensity < 40) {
+        calc_traffic_level = 'medium';
+    }
+
+    const trafficInfo = document.getElementById("traffic-info");
+    if(!isNaN(redDensity)){
+        if (trafficInfo) {
+            trafficInfo.innerHTML = `
+                <p><strong>Traffic Density Analysis:</strong></p>
+                <p>High (Red): ${redDensity.toFixed(2)}%</p>
+                <p>Moderate (Orange): ${orangeDensity.toFixed(2)}%</p>
+                <p>Light (Yellow): ${yellowDensity.toFixed(2)}%</p>
+                <p>No Traffic (Green): ${greenDensity.toFixed(2)}%</p>
+                <p>Traffic level: ${calc_traffic_level}</p>
+            `;
+        }
+    }
+    else if (trafficInfo) {
+        trafficInfo.innerHTML = `<p>Traffic level: ${calc_traffic_level}</p>`;
+    }
+
+    
+    return calc_traffic_level;
+}
+
+function isRed(r, g, b) {
+    return r > 160 && g < 80 && b < 80;
+}
+
+function isOrange(r, g, b) {
+    return r > 180 && r <= 250 && g > 100 && g <= 180 && b < 90;
+}
+
+function isYellow(r, g, b) {
+    return r > 200 && g > 170 && g <= 255 && b > 60 && b < 120;
+}
+
+function isGreen(r, g, b) {
+    return r < 110 && g > 170 && g <= 255 && b < 170;
+}
+
+function updateTrafficDisplayPlaceholder(message) {
+    const trafficInfo = document.getElementById("traffic-info");
+    if (trafficInfo) {
+        trafficInfo.innerHTML = `<p>${message}</p>`;
+    }
+}
+
+// Insert a container in the HTML to display traffic density information
+document.body.insertAdjacentHTML(
+    "beforeend",
+    `
+    <div id="traffic-info" style="position: absolute; top: 20px; right: 30px; background: white; padding: 10px; border-radius: 5px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); font-size: 14px;">
+        <p>Initializing traffic density analysis...</p>
+    </div>
+`
+);
+
+
+
+function loadCars(traffic_level){
 Promise.all([
-    loadModel(scene,'Mustang', '/assets/shelby/scene.gltf', 450, 0, 60, 12),
-    loadModel(scene,'Focus', '/assets/focus/scene.gltf', 500, 0, 30, 12),
-    loadModel(scene,'Boxster', '/assets/boxster/scene.gltf', 1.35, 3.9, 45, 12),
-    loadModel(scene,'Porsche', '/assets/porsche/scene.gltf', 5, 0.55, 30, 8),
+    loadModel(scene,'Mustang', '/assets/shelby/scene.gltf', 450, 0, 60, 12,traffic_level),
+    loadModel(scene,'Focus', '/assets/focus/scene.gltf', 500, 0, 30, 12,traffic_level),
+    loadModel(scene,'Boxster', '/assets/boxster/scene.gltf', 1.35, 3.9, 45, 12,traffic_level),
+    loadModel(scene,'Porsche', '/assets/porsche/scene.gltf', 5, 0.55, 30, 8,traffic_level),
     // loadModel(scene,'Civic', '/assets/civic/scene.gltf', 500, 0, 75, 12)
 ]).then(() => {
     console.log('All models loaded:', cars);
-    // scene.remove(cars['Mustang'][1]);
-    // scene.remove(cars['Mustang'][5]);
-    // scene.remove(cars['Mustang'][9]);
-    scene.remove(cars['Focus'][8]);
-    // scene.remove(cars['Mustang'][0]);
-    // scene.remove(cars['Mustang'][4]);
-    // scene.remove(cars['Mustang'][8]);
-    // scene.remove(cars['Mustang'][2]);
-    // scene.remove(cars['Mustang'][6]);
-    // scene.remove(cars['Mustang'][10]);
-    scene.remove(cars['Focus'][11]);
+    if(traffic_level==='medium' || traffic_level==='high'){
+        scene.remove(cars['Focus'][8]);
+    }
+    if(traffic_level==='high'){scene.remove(cars['Focus'][11]);}
 
 
     setInterval(() => {
         // Define the cars you want to include in the loop
-        const carModels = [
-            [cars['Focus'][5]], // Include Focus car at index 5
-            [cars['Boxster'][5]], // Include Boxster car at index 5
-            [cars['Focus'][1]],
-            [cars['Boxster'][1]],
-            [cars['Focus'][9]],
-            [cars['Boxster'][9]],
-            [cars['Porsche'][1]],
-            [cars['Porsche'][5]],
-            [cars['Porsche'][9]],
-            [cars['Mustang'][1]],
-            [cars['Mustang'][5]],
-            [cars['Mustang'][9]],
-        ];
+        let carModels = [];
+        if (traffic_level==='low'){
+            carModels = [
+                [cars['Focus'][1]], // Include Focus car at index 5
+                [cars['Boxster'][1]], // Include Boxster car at index 5
+                [cars['Mustang'][1]],
+                [cars['Porsche'][1]],
+            ];
+        }
+        else if(traffic_level==='medium'){
+            carModels = [
+                [cars['Focus'][5]], // Include Focus car at index 5
+                [cars['Boxster'][5]], // Include Boxster car at index 5
+                [cars['Focus'][1]],
+                [cars['Boxster'][1]],
+                [cars['Porsche'][1]],
+                [cars['Porsche'][5]],
+                [cars['Mustang'][1]],
+                [cars['Mustang'][5]],
+            ];
+        }
+        else if(traffic_level==='high'){
+            carModels = [
+                [cars['Focus'][5]], // Include Focus car at index 5
+                [cars['Boxster'][5]], // Include Boxster car at index 5
+                [cars['Focus'][1]],
+                [cars['Boxster'][1]],
+                [cars['Focus'][9]],
+                [cars['Boxster'][9]],
+                [cars['Porsche'][1]],
+                [cars['Porsche'][5]],
+                [cars['Porsche'][9]],
+                [cars['Mustang'][1]],
+                [cars['Mustang'][5]],
+                [cars['Mustang'][9]],
+            ];
+        }
 
         // Loop over each car array and each car within those arrays
         carModels.forEach(carArray => {
@@ -258,20 +468,43 @@ Promise.all([
         });
     }, 250);
     setInterval(() => {
-        const carModels = [
-            [cars['Focus'][4]],
-            [cars['Boxster'][4]],
-            [cars['Focus'][0]],
-            [cars['Boxster'][0]],
-            // [cars['Focus'][8]],
-            [cars['Boxster'][8]],
-            [cars['Porsche'][0]],
-            [cars['Porsche'][4]],
-            [cars['Porsche'][8]],
-            [cars['Mustang'][0]],
-            [cars['Mustang'][4]],
-            [cars['Mustang'][8]],
-        ];
+        let carModels = [];
+        if (traffic_level==='low'){
+            carModels = [
+                [cars['Focus'][0]], // Include Focus car at index 5
+                [cars['Boxster'][0]], // Include Boxster car at index 5
+                [cars['Mustang'][0]],
+                [cars['Porsche'][0]],
+            ];
+        }
+        else if(traffic_level==='medium'){
+            carModels = [
+                [cars['Focus'][4]],
+                [cars['Boxster'][4]],
+                [cars['Focus'][0]],
+                [cars['Boxster'][0]],
+                [cars['Porsche'][0]],
+                [cars['Porsche'][4]],
+                [cars['Mustang'][0]],
+                [cars['Mustang'][4]],
+            ];
+        }
+        else if(traffic_level==='high'){
+            carModels = [
+                [cars['Focus'][4]],
+                [cars['Boxster'][4]],
+                [cars['Focus'][0]],
+                [cars['Boxster'][0]],
+                // [cars['Focus'][8]],
+                [cars['Boxster'][8]],
+                [cars['Porsche'][0]],
+                [cars['Porsche'][4]],
+                [cars['Porsche'][8]],
+                [cars['Mustang'][0]],
+                [cars['Mustang'][4]],
+                [cars['Mustang'][8]],
+            ];
+        }
         carModels.forEach(carArray => {
             carArray.forEach(car => {
                 let lane=5;
@@ -346,20 +579,43 @@ Promise.all([
         });
     }, 250);
     setInterval(() => {
-        const carModels = [
-            [cars['Focus'][6]],
-            [cars['Boxster'][6]],
-            [cars['Focus'][2]],
-            [cars['Boxster'][2]],
-            [cars['Focus'][10]],
-            [cars['Boxster'][10]],
-            [cars['Porsche'][2]],
-            [cars['Porsche'][6]],
-            [cars['Porsche'][10]],
-            [cars['Mustang'][2]],
-            [cars['Mustang'][6]],
-            [cars['Mustang'][10]],
-        ];
+        let carModels = [];
+        if (traffic_level==='low'){
+            carModels = [
+                [cars['Focus'][2]], // Include Focus car at index 5
+                [cars['Boxster'][2]], // Include Boxster car at index 5
+                [cars['Mustang'][2]],
+                [cars['Porsche'][2]],
+            ];
+        }
+        else if(traffic_level==='medium'){
+            carModels = [
+                [cars['Focus'][6]],
+                [cars['Boxster'][6]],
+                [cars['Focus'][2]],
+                [cars['Boxster'][2]],
+                [cars['Porsche'][2]],
+                [cars['Porsche'][6]],
+                [cars['Mustang'][2]],
+                [cars['Mustang'][6]],
+            ];
+        }
+        else if(traffic_level==='high'){
+            carModels = [
+                [cars['Focus'][6]],
+                [cars['Boxster'][6]],
+                [cars['Focus'][2]],
+                [cars['Boxster'][2]],
+                [cars['Focus'][10]],
+                [cars['Boxster'][10]],
+                [cars['Porsche'][2]],
+                [cars['Porsche'][6]],
+                [cars['Porsche'][10]],
+                [cars['Mustang'][2]],
+                [cars['Mustang'][6]],
+                [cars['Mustang'][10]],
+            ];
+        }
         carModels.forEach(carArray => {
             carArray.forEach(car => {
                 let lane=5;
@@ -434,20 +690,43 @@ Promise.all([
         });
     }, 250);
     setInterval(() => {
-        const carModels = [
-            [cars['Focus'][7]],
-            [cars['Boxster'][7]],
-            [cars['Focus'][3]],
-            [cars['Boxster'][3]],
-            // [cars['Focus'][11]],
-            [cars['Boxster'][11]],
-            [cars['Porsche'][3]],
-            [cars['Porsche'][7]],
-            [cars['Porsche'][11]],
-            [cars['Mustang'][3]],
-            [cars['Mustang'][7]],
-            [cars['Mustang'][11]],
-        ];
+        let carModels = [];
+        if (traffic_level==='low'){
+            carModels = [
+                [cars['Focus'][3]], // Include Focus car at index 5
+                [cars['Boxster'][3]], // Include Boxster car at index 5
+                [cars['Mustang'][3]],
+                [cars['Porsche'][3]],
+            ];
+        }
+        else if(traffic_level==='medium'){
+            carModels = [
+                [cars['Focus'][7]],
+                [cars['Boxster'][7]],
+                [cars['Focus'][3]],
+                [cars['Boxster'][3]],
+                [cars['Porsche'][3]],
+                [cars['Porsche'][7]],
+                [cars['Mustang'][3]],
+                [cars['Mustang'][7]],
+            ];
+        }
+        else if(traffic_level==='high'){
+            carModels = [
+                [cars['Focus'][7]],
+                [cars['Boxster'][7]],
+                [cars['Focus'][3]],
+                [cars['Boxster'][3]],
+                // [cars['Focus'][11]],
+                [cars['Boxster'][11]],
+                [cars['Porsche'][3]],
+                [cars['Porsche'][7]],
+                [cars['Porsche'][11]],
+                [cars['Mustang'][3]],
+                [cars['Mustang'][7]],
+                [cars['Mustang'][11]],
+            ];
+        }
         carModels.forEach(carArray => {
             carArray.forEach(car => {
                 let lane=5;
@@ -525,11 +804,10 @@ Promise.all([
 }).catch(error => {
     console.error(error);
 });
-
+}
 
 loadRoad(scene);
-setupJoystick(scene, camera);
-//Define a list containing lists of diffrent sizes
+
 let occ2 = [  [0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0, 0, 0], 
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -781,10 +1059,6 @@ function controlTrafficSignals() {
 function startTrafficSignals() {
     isRunning = true;
     controlTrafficSignals();
-}
-
-function stopTrafficSignals() {
-    isRunning = false;
 }
 
 // Function to create or update the placeholder box with the correct image
