@@ -1,6 +1,7 @@
 // src/environment/lighting.js
 import * as THREE from 'three';
 
+// creates a directional light with a white color and an intensity of 3 with a shadow casting property set to true
 export function initLighting(scene) {
     const sunlight = new THREE.DirectionalLight(0xffffff, 3); // Adjusted intensity
     sunlight.position.set(100, 150, 100); // Adjusted position for better shadow casting

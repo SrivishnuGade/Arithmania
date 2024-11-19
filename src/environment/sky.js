@@ -1,11 +1,13 @@
 // src/environment/sky.js
 import * as THREE from 'three';
 
+/* adds sky object to the 3D scene and creates a shader materialwith custom vertex and fragment shader, which generates
+generates a gradient sky with light blue at the top and light green at the bottom */
 export function initSky(scene) {
     const skyShader = {
         uniforms: {
-            "topColor": { value: new THREE.Color(0xB3DAE8) },
-            "bottomColor": { value: new THREE.Color(0xB3DAE8) },
+            "topColor": { value: new THREE.Color(0xB2DAE8) },
+            "bottomColor": { value: new THREE.Color(0xB2DAE8) },
             "offset": { value: 33 },
             "exponent": { value: 0.6 }
         },
