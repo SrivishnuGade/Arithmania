@@ -1,4 +1,8 @@
 // src/loaders/gltfLoader.js
+// This code loads the required number of cars based on traffic level
+// and adds them to the scene. It also clones the cars and adds them to the scene
+// at different positions and rotations to simulate traffic.
+
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as THREE from 'three'; // Import THREE if not done elsewhere
 
@@ -93,4 +97,5 @@ export function loadModel(scene,name, path, scale, positionY = 0, counter = 0, l
     });
 }
 
+// return cars object to be used in other modules
 export { cars };

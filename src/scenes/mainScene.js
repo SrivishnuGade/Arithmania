@@ -1,6 +1,5 @@
 // src/scenes/mainScene.js
 import * as THREE from 'three';
-import { gsap } from 'gsap';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { initFog } from '../environment/fog.js';
 import { initLighting } from '../environment/lighting.js';
@@ -8,7 +7,6 @@ import { initGround } from '../environment/ground.js';
 import { initSky } from '../environment/sky.js';
 import { cars, loadModel } from '../loaders/gltfloader.js';
 import { loadRoad } from '../loaders/objloader.js';
-import { createJoystick, resetJoystick, removeJoystickControl, setupJoystick } from '../controls/joystickcontrols.js';
 import { moveCarRight, moveCarRight1, moveCarRight2, moveCarRight3 ,
     moveCarLeft1,moveCarLeft11,moveCarLeft12,moveCarLeft13,
     moveCarLeft2,moveCarLeft21,moveCarLeft22,moveCarLeft23,
@@ -16,6 +14,7 @@ import { moveCarRight, moveCarRight1, moveCarRight2, moveCarRight3 ,
     moveCarFront,moveCarFront1,moveCarFront2,moveCarFront3,
     changeLane,changeLane1,changeLane2,changeLane3
 } from '../movements/carMovements.js';
+import html2canvas from 'html2canvas';
 
 
 
@@ -90,7 +89,6 @@ for (let i = 0; i < 10; i++) {
     scene.add(cloud);
 }
 
-import html2canvas from 'html2canvas';
 
 let traffic_level = 'high';
 

@@ -1,4 +1,6 @@
 // src/loaders/objLoader.js
+// This code loads the road model from the OBJ file
+// and adds it to the scene.
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 
 export function loadRoad(scene) {
