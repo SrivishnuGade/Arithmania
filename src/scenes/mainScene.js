@@ -305,10 +305,14 @@ document.body.insertAdjacentHTML(
 
 function loadCars(traffic_level){
 Promise.all([
-    loadModel(scene,'Mustang', '/assets/shelby/scene.gltf', 450, 0, 60, 12,traffic_level),
-    loadModel(scene,'Focus', '/assets/focus/scene.gltf', 500, 0, 30, 12,traffic_level),
-    loadModel(scene,'Boxster', '/assets/boxster/scene.gltf', 1.35, 3.9, 45, 12,traffic_level),
-    loadModel(scene,'Porsche', '/assets/porsche/scene.gltf', 5, 0.55, 30, 8,traffic_level),
+    // loadModel(scene,'Mustang', '/assets/shelby/scene.gltf', 450, 0, 60, 12,traffic_level),
+    // loadModel(scene,'Focus', '/assets/focus/scene.gltf', 500, 0, 30, 12,traffic_level),
+    // loadModel(scene,'Boxster', '/assets/boxster/scene.gltf', 1.35, 3.9, 45, 12,traffic_level),
+    // loadModel(scene,'Porsche', '/assets/porsche/scene.gltf', 5, 0.55, 30, 8,traffic_level),
+    loadModel(scene, 'Mustang', '/assets/shelby/scene_draco.gltf', 450, 0, 60, 12, traffic_level),
+    loadModel(scene, 'Focus', '/assets/focus/scene_draco.gltf', 500, 0, 30, 12, traffic_level),
+    loadModel(scene, 'Boxster', '/assets/boxster/scene_draco.gltf', 1.35, 3.9, 45, 12, traffic_level),
+    loadModel(scene, 'Porsche', '/assets/porsche/scene_draco.gltf', 5, 0.55, 30, 8, traffic_level)
     // loadModel(scene,'Civic', '/assets/civic/scene.gltf', 500, 0, 75, 12)
 ]).then(() => {
     console.log('All models loaded:', cars);

@@ -4,11 +4,20 @@
 // at different positions and rotations to simulate traffic.
 
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import * as THREE from 'three'; // Import THREE if not done elsewhere
 
 // Define cars globally within the module (but not in the function)
 const cars = {};
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('node_modules/three/examples/jsm/libs/draco/'); // Path to Draco decoder files
+
+// GLTF Loader Setup
 const gltfLoader = new GLTFLoader();
+gltfLoader.setDRACOLoader(dracoLoader);
+
+
+// const gltfLoader = new GLTFLoader();
 export function loadModel(scene,name, path, scale, positionY = 0, counter = 0, l = 0,traffic_level) {
     return new Promise((resolve, reject) => {
         gltfLoader.load(path, function (gltf) {
