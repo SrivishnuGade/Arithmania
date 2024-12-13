@@ -10,7 +10,7 @@ import * as THREE from 'three'; // Import THREE if not done elsewhere
 // Define cars globally within the module (but not in the function)
 const cars = {};
 const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath('node_modules/three/examples/jsm/libs/draco/'); // Path to Draco decoder files
+dracoLoader.setDecoderPath('/assets/draco/'); // Path to Draco decoder files
 
 // GLTF Loader Setup
 const gltfLoader = new GLTFLoader();
