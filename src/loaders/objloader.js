@@ -12,8 +12,10 @@ export function loadRoad(scene) {
             if (node.isMesh) {
                 node.castShadow = true;
                 node.receiveShadow = true;
+                child.material.map = texture;
             }
         });
         scene.add(obj);
     });
 }
+
