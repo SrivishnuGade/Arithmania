@@ -15,6 +15,22 @@ import { loadTree } from '../loaders/treeLoader.js';
 import { loadGrass } from '../loaders/grassLoader.js';
 
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { readCsvFile } from '../utils/csvReader.js';
+
+let ndvi=[[]];
+
+readCsvFile('Anamalai_last_ndvi.csv')
+    .then((data) => {
+        // console.log('CSV Data:', data);
+        ndvi=data;
+        console.log("NDVI: ", ndvi);
+        initGround(scene, ndvi); // Pass the NDVI data to initGround
+    })
+    .catch((error) => {
+        console.error('Error:', error.message);
+    });
+
+// console.log("NDVI: ", ndvi);
 
 const scene = new THREE.Scene();
 initFog(scene);
@@ -38,7 +54,7 @@ controls.dampingFactor = 0.1;
 const clock = new THREE.Clock();
 
 initLighting(scene);
-initGround(scene);
+// initGround(scene);
 initSky(scene);
 // loadTree(scene); // Load the tree model
 
@@ -83,44 +99,44 @@ function createFluffyCloud() {
     return cloudGroup;
 }
 
-function generateGrass(scene) {
-    const grassGroup = new THREE.Group(); // Group to hold all grass blades
-    const grassMaterial = new THREE.MeshPhongMaterial({
-        color: 0x228B22, // Grass green color
-        side: THREE.DoubleSide, // Render both sides of the grass blade
-    });
+// function generateGrass(scene) {
+//     const grassGroup = new THREE.Group(); // Group to hold all grass blades
+//     const grassMaterial = new THREE.MeshPhongMaterial({
+//         color: 0x228B22, // Grass green color
+//         side: THREE.DoubleSide, // Render both sides of the grass blade
+//     });
 
-    const grassBladeGeometry = new THREE.PlaneGeometry(0.5, 2); // Each grass blade is a small plane
+//     const grassBladeGeometry = new THREE.PlaneGeometry(0.5, 2); // Each grass blade is a small plane
 
-    const grassCount = 100000; // Number of grass blades to generate
-    const grassAreaSize = 1000; // Size of the area where grass will be distributed
+//     const grassCount = 100000; // Number of grass blades to generate
+//     const grassAreaSize = 1000; // Size of the area where grass will be distributed
 
-    for (let i = 0; i < grassCount; i++) {
-        const grassBlade = new THREE.Mesh(grassBladeGeometry, grassMaterial);
+//     for (let i = 0; i < grassCount; i++) {
+//         const grassBlade = new THREE.Mesh(grassBladeGeometry, grassMaterial);
 
-        // Randomly position each grass blade within the area
-        grassBlade.position.set(
-            Math.random() * grassAreaSize - grassAreaSize / 2, // Random x position
-            0, // Grass is on the ground
-            Math.random() * grassAreaSize - grassAreaSize / 2 // Random z position
-        );
+//         // Randomly position each grass blade within the area
+//         grassBlade.position.set(
+//             Math.random() * grassAreaSize - grassAreaSize / 2, // Random x position
+//             0, // Grass is on the ground
+//             Math.random() * grassAreaSize - grassAreaSize / 2 // Random z position
+//         );
 
-        // Randomly rotate each grass blade for variation
-        grassBlade.rotation.y = Math.random() * Math.PI;
+//         // Randomly rotate each grass blade for variation
+//         grassBlade.rotation.y = Math.random() * Math.PI;
 
-        // Randomly scale each grass blade for variation
-        const scale = Math.random() * 0.5 + 0.5; // Scale between 0.5 and 1
-        grassBlade.scale.set(scale, scale, scale);
+//         // Randomly scale each grass blade for variation
+//         const scale = Math.random() * 0.5 + 0.5; // Scale between 0.5 and 1
+//         grassBlade.scale.set(scale, scale, scale);
 
-        grassGroup.add(grassBlade);
-    }
+//         grassGroup.add(grassBlade);
+//     }
 
-    grassGroup.position.y = 0.01; // Slightly above the ground to avoid z-fighting
-    scene.add(grassGroup);
-}
+//     grassGroup.position.y = 0.01; // Slightly above the ground to avoid z-fighting
+//     scene.add(grassGroup);
+// }
 
-// Call the function to generate grass
-generateGrass(scene);
+// // Call the function to generate grass
+// generateGrass(scene);
 
 // Add multiple fluffy clouds to the scene
 for (let i = 0; i < 10; i++) {
@@ -358,9 +374,9 @@ function updateSimulation() {
     if (deers.length < 30 && Math.random() < 0.3) {
         const newDeer = deers[0].clone(); // Clone an existing deer
         newDeer.position.set(
-            Math.random() * 800 - 400,
+            Math.random() * 200 - 100,
             0,
-            Math.random() * 800 - 400
+            Math.random() * 200 - 100
         );
         scene.add(newDeer);
         deers.push(newDeer);
@@ -398,6 +414,10 @@ function updateSimulation() {
     }
 
     console.log(`Deers: ${deers.length}, Tigers: ${tigers.length}`);
+    document.getElementById('tigerCount').textContent = tigers.length;
+    document.getElementById('deerCount').textContent = deers.length;
+
+    console.log(`Deers: ${deers.length}, Tigers: ${tigers.length}`);
 }
 
 setInterval(() => {
@@ -409,6 +429,8 @@ function onWindowResize() {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
+
+
 
 function animate() {
     const delta = clock.getDelta();
