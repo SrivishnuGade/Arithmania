@@ -18,13 +18,54 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { readCsvFile } from '../utils/csvReader.js';
 
 let ndvi=[[]];
+let preydensity=[[]];
+let predatordensity=[[]];
+let predatorSum = 0;
+let preySum = 0;
 
-readCsvFile('Anamalai_last_ndvi.csv')
+function calculateDensitySum(densityArray) {
+    let sum = 0;
+    for (let i = 0; i < densityArray.length; i++) {
+        for (let j = 0; j < densityArray[i].length; j++) {
+            sum += parseFloat(densityArray[i][j]) || 0; // Safely parse and handle invalid values
+        }
+    }
+    return sum;
+}
+
+let park="Nagarhole";
+let ndviFile=`${park}_last_ndvi.csv`;
+let preyFile=`${park}_last_prey_density.csv`;
+let predatorFile=`${park}_last_predator_density.csv`;
+
+readCsvFile(ndviFile)
     .then((data) => {
         // console.log('CSV Data:', data);
         ndvi=data;
         console.log("NDVI: ", ndvi);
         initGround(scene, ndvi); // Pass the NDVI data to initGround
+    })
+    .catch((error) => {
+        console.error('Error:', error.message);
+    });
+readCsvFile(predatorFile)
+    .then((data) => {
+        // console.log('CSV Data:', data);
+        predatordensity=data;
+        console.log("predd: ", predatordensity);
+        predatorSum=calculateDensitySum(predatordensity);
+        console.log("Predator Density Sum:", predatorSum);
+    })
+    .catch((error) => {
+        console.error('Error:', error.message);
+    });
+readCsvFile(preyFile)
+    .then((data) => {
+        // console.log('CSV Data:', data);
+        preydensity=data;
+        console.log("preyd: ", preydensity);
+        preySum=calculateDensitySum(preydensity);
+        console.log("Prey Density Sum:", preySum); 
     })
     .catch((error) => {
         console.error('Error:', error.message);
@@ -35,7 +76,7 @@ readCsvFile('Anamalai_last_ndvi.csv')
 const scene = new THREE.Scene();
 initFog(scene);
 
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 5, 5000);
 camera.position.set(30, 75, 350);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -166,8 +207,8 @@ window.addEventListener('resize', onWindowResize, false);
 // Load the tiger model and its animations
 const fbxLoader = new FBXLoader();
 
-let numtigers = 10;
-let numdeers = 50;
+let numtigers = Math.random()*2+8;
+let numdeers = Math.random()*5+ 45;
 
 fbxLoader.load(
     '/assets/tiger/source/tiger_run.fbx',
@@ -195,10 +236,27 @@ fbxLoader.load(
             }
     
             tigerMixers.push(mixer);
-    
+            let placed = false;
+            while (!placed) {
+                const gridX = Math.floor(Math.random() * predatordensity.length); // Random grid cell (x)
+                const gridZ = Math.floor(Math.random() * predatordensity[0].length); // Random grid cell (z)
+
+                const density = predatordensity[gridX][gridZ] ? parseFloat(predatordensity[gridX][gridZ]) : 0;
+
+                // Use density as a probability to place the tiger
+                if (Math.random() < density) {
+                    const tileSize = 1000 / predatordensity.length; // Assuming the ground is divided into a grid matching predatordensity
+                    tigerClone.position.set(
+                        -500 + tileSize * (gridX + Math.random()), // Random position within the tile
+                        0,
+                        -500 + tileSize * (gridZ + Math.random())  // Random position within the tile
+                    );
+                    placed = true; // Tiger placed successfully
+                }
+            }
             // Spread them out in the scene
             tigerClone.scale.set(0.1, 0.1, 0.1);
-            tigerClone.position.set(Math.random() * 800 - 400, 0, Math.random() * 800 - 400); // Adjust positions to prevent overlap
+            
             tigerClone.updateMatrix();
             tigerClone.updateMatrixWorld(true);
     
@@ -258,9 +316,27 @@ fbxLoader.load(
 
         deerMixers.push(mixer);
 
+        let placed = false;
+        while (!placed) {
+            const gridX = Math.floor(Math.random() * preydensity.length); // Random grid cell (x)
+            const gridZ = Math.floor(Math.random() * preydensity[0].length); // Random grid cell (z)
+
+            const density = preydensity[gridX][gridZ] ? parseFloat(preydensity[gridX][gridZ]) : 0;
+
+            // Use density as a probability to place the deer
+            if (Math.random() < density) {
+                const tileSize = 1000 / preydensity.length; // Assuming the ground is divided into a grid matching preydensity
+                deerClone.position.set(
+                    -500 + tileSize * (gridX + Math.random()), // Random position within the tile
+                    0,
+                    -500 + tileSize * (gridZ + Math.random())  // Random position within the tile
+                );
+                placed = true; // Deer placed successfully
+            }
+        }
         // Spread them out in the scene
         deerClone.scale.set(0.1, 0.1, 0.1);
-        deerClone.position.set(Math.random() * 800 - 400, 0, Math.random() * 800 - 400); // Adjust positions to prevent overlap
+        // deerClone.position.set(Math.random() * 800 - 400, 0, Math.random() * 800 - 400); // Adjust positions to prevent overlap
         // deerClone.position.set(0, 0,0); // Adjust positions to prevent overlap
         deerClone.updateMatrix();
         deerClone.updateMatrixWorld(true);
@@ -395,6 +471,7 @@ function updateSimulation() {
         scene.remove(tigerToRemove);
         tigerMixers.pop();
     }
+    // Reproduction: Add new tigers if below max limit
     if (tigers.length < 10 && Math.random() < 0.05) {
         const newTiger = tigers[0].clone(); // Clone an existing tiger
         newTiger.position.set(
