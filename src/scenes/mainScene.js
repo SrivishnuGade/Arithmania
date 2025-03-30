@@ -34,6 +34,7 @@ function calculateDensitySum(densityArray) {
 }
 
 let park="Nagarhole";
+
 let ndviFile=`${park}_last_ndvi.csv`;
 let preyFile=`${park}_last_prey_density.csv`;
 let predatorFile=`${park}_last_predator_density.csv`;
@@ -447,7 +448,7 @@ function updateSimulation() {
     });
 
     // Reproduction: Add new deers if below max limit
-    if (deers.length < 30 && Math.random() < 0.3) {
+    if (deers && deers.length < 30 && Math.random() < 0.3) {
         const newDeer = deers[0].clone(); // Clone an existing deer
         newDeer.position.set(
             Math.random() * 200 - 100,
@@ -472,7 +473,7 @@ function updateSimulation() {
         tigerMixers.pop();
     }
     // Reproduction: Add new tigers if below max limit
-    if (tigers.length < 10 && Math.random() < 0.05) {
+    if (tigers && tigers.length < 10 && Math.random() < 0.05) {
         const newTiger = tigers[0].clone(); // Clone an existing tiger
         newTiger.position.set(
             Math.random() * 800 - 400,
